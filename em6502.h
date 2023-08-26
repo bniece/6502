@@ -9,14 +9,17 @@
 #ifndef EM6502_H
 #define EM6502_H
 
-// Size definitions
+// Definitions for emulator defaults
 #define MAX_MEM 1024 * 64
+#define DEF_DATA_ADDR 0x200
+#define DEF_CODE_ADDR 0x600
 
 // Memory management funtions
-void import_mem(char *filename, byte *addr);
-void print_mem_page(byte *page, int mark);
+int import_mem(char *filename, byte *mem, word addr);
+	// Returns 0 on success
+void print_mem_page(byte *mem, word addr, int mark);
 
 // Get array of instruction functions
-extern void (*execute[])(CPU *cpu, byte *mem);
+extern void (*execute[])(CPU *cpu);
 
 #endif
