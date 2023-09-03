@@ -18,17 +18,21 @@ void log_op_start(CPU *cpu, char *op, int bytes)
 void log_op_end(CPU *cpu, byte result, int cycles)
 // Print operation result & status register, count cycles
 {
+	for (cpu->TC = 0; cpu->TC < cycles; cpu->TC++)
+	{
+		printf(" .");
+	}
+	for (cpu->TC = cycles - 1; cpu->TC < 7; cpu->TC++)
+	{
+		printf("  ");
+	}
+
 	printf(" 0x%02X", result);
 
 	printf(" %c%c%c%c%c%c%c", cpu->SR & N ? 'N' : 'n', 
 			cpu->SR & V ? 'V' : 'v', cpu->SR & B ? 'B' : 'b', 
 			cpu->SR & D ? 'D' : 'd', cpu->SR & I ? 'I' : 'i',
 			cpu->SR & Z ? 'Z' : 'z', cpu->SR & C ? 'C' : 'c');
-
-	for (cpu->TC = 0; cpu->TC < cycles; cpu->TC++)
-	{
-		printf(" %d", cpu->TC);
-	}
 
 	printf("\n");
 }
@@ -44,8 +48,83 @@ void do_BRK_impl(CPU *cpu)
 	log_op_end(cpu, 0, ncycles);
 }
 
+void do_CLC_impl(CPU *cpu)
+// Clear Carry flag
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "CLC   ", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: Clear C
+	cpu->SR &= ~C;
+
+	log_op_end(cpu, cpu->SR, ncycles);
+
+	return;
+}
+
+void do_SEC_impl(CPU *cpu)
+// Set Carry flag
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "SEC   ", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: Set C
+	cpu->SR |= C;
+
+	log_op_end(cpu, cpu->SR, ncycles);
+
+	return;
+}
+
+void do_ADC_zpg(CPU *cpu)
+// Add with Carry, zero page addressing
+// 	A, C = A + M + C
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "ADC zpg", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	// 	Do the addition and update C
+	// 	Set N,V,Z if necessary
+	// 	Store in A
+	byte M = fetch(cpu, addr);
+
+	int result = cpu->A + M + ((cpu->SR & C)?1:0);
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_V(cpu, cpu->A, M, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return;
+}
+
 void do_ADC_imm(CPU *cpu)
-// Load Accumulator with immediate addressing
+// Add with Carry, immediate addressing
+// 	A, C = A + M + C
 {
 	int nbytes = 2;
 	int ncycles = 2;
@@ -56,20 +135,66 @@ void do_ADC_imm(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 1: fetch byte and increment PC
-	// 	Do the addition
-	// 	Set N,V,Z,C if necessary
+	// 	Do the addition and update C
+	// 	Set N,V,Z if necessary
 	// 	Store in A
-	byte operand = fetch(cpu, cpu->PC);
+	byte M = fetch(cpu, cpu->PC);
 	cpu->PC++;
 
-	int result = cpu->A + operand;
-
-	set_N(cpu, result);
-	set_V(cpu, cpu->A, operand, result);
-	set_Z(cpu, result);
+	int result = cpu->A + M + ((cpu->SR & C)?1:0);
 	set_C(cpu, result);
 
+	set_N(cpu, result);
+	set_V(cpu, cpu->A, M, result);
+	set_Z(cpu, result);
+
 	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return;
+}
+
+void do_STA_zpg(CPU *cpu)
+// Store Accumulator in memory with absolute addressing
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "STA zpg", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  store A at addr
+	cpu->mem[addr] = cpu->A;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return;
+}
+
+void do_TXA_impl(CPU *cpu)
+// Transfer X to Accumulator
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "TXA   ", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: copy byte from X to A
+	// 	set N,Z if necessary
+	cpu->A = cpu->X;
+
+	set_N(cpu, cpu->A);
+	set_Z(cpu, cpu->A);
 
 	log_op_end(cpu, cpu->A, ncycles);
 
@@ -99,6 +224,52 @@ void do_STA_abs(CPU *cpu)
 	cpu->mem[addr] = cpu->A;
 
 	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return;
+}
+
+void do_TYA_impl(CPU *cpu)
+// Transfer Y to Accumulator
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "TYA   ", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: copy byte from Y to A
+	// 	set N,Z if necessary
+	cpu->A = cpu->Y;
+
+	set_N(cpu, cpu->A);
+	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return;
+}
+
+void do_TAY_impl(CPU *cpu)
+// Transfer Accumulator to Y
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "TAY   ", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: copy byte from A to Y
+	// 	set N,Z if necessary
+	cpu->Y = cpu->A;
+
+	set_N(cpu, cpu->Y);
+	set_Z(cpu, cpu->Y);
+
+	log_op_end(cpu, cpu->Y, ncycles);
 
 	return;
 }
@@ -146,6 +317,29 @@ void do_TAX_impl(CPU *cpu)
 	set_Z(cpu, cpu->X);
 
 	log_op_end(cpu, cpu->X, ncycles);
+
+	return;
+}
+
+void do_INY_impl(CPU *cpu)
+// Increment Y register
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "INY   ", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: Increment Y
+	// 	set N,Z if necessary
+	cpu->Y++;
+
+	set_N(cpu, cpu->Y);
+	set_Z(cpu, cpu->Y);
+
+	log_op_end(cpu, cpu->Y, ncycles);
 
 	return;
 }
@@ -217,7 +411,7 @@ do_NOP_impl, 	// 0x14
 do_NOP_impl, 	// 0x15
 do_NOP_impl, 	// 0x16
 do_NOP_impl, 	// 0x17
-do_NOP_impl, 	// 0x18
+do_CLC_impl, 	// 0x18
 do_NOP_impl, 	// 0x19
 do_NOP_impl, 	// 0x1A
 do_NOP_impl, 	// 0x1B
@@ -249,7 +443,7 @@ do_NOP_impl, 	// 0x34
 do_NOP_impl, 	// 0x35
 do_NOP_impl, 	// 0x36
 do_NOP_impl, 	// 0x37
-do_NOP_impl, 	// 0x38
+do_SEC_impl, 	// 0x38
 do_NOP_impl, 	// 0x39
 do_NOP_impl, 	// 0x3A
 do_NOP_impl, 	// 0x3B
@@ -294,7 +488,7 @@ do_NOP_impl, 	// 0x61
 do_NOP_impl, 	// 0x62
 do_NOP_impl, 	// 0x63
 do_NOP_impl, 	// 0x64
-do_NOP_impl, 	// 0x65
+do_ADC_zpg, 	// 0x65
 do_NOP_impl, 	// 0x66
 do_NOP_impl, 	// 0x67
 do_NOP_impl, 	// 0x68
@@ -326,12 +520,12 @@ do_NOP_impl, 	// 0x81
 do_NOP_impl, 	// 0x82
 do_NOP_impl, 	// 0x83
 do_NOP_impl, 	// 0x84
-do_NOP_impl, 	// 0x85
+do_STA_zpg, 	// 0x85
 do_NOP_impl, 	// 0x86
 do_NOP_impl, 	// 0x87
 do_NOP_impl, 	// 0x88
 do_NOP_impl, 	// 0x89
-do_NOP_impl, 	// 0x8A
+do_TXA_impl, 	// 0x8A
 do_NOP_impl, 	// 0x8B
 do_NOP_impl, 	// 0x8C
 do_STA_abs, 	// 0x8D
@@ -345,7 +539,7 @@ do_NOP_impl, 	// 0x94
 do_NOP_impl, 	// 0x95
 do_NOP_impl, 	// 0x96
 do_NOP_impl, 	// 0x97
-do_NOP_impl, 	// 0x98
+do_TYA_impl, 	// 0x98
 do_NOP_impl, 	// 0x99
 do_NOP_impl, 	// 0x9A
 do_NOP_impl, 	// 0x9B
@@ -361,7 +555,7 @@ do_NOP_impl, 	// 0xA4
 do_NOP_impl, 	// 0xA5
 do_NOP_impl, 	// 0xA6
 do_NOP_impl, 	// 0xA7
-do_NOP_impl, 	// 0xA8
+do_TAY_impl, 	// 0xA8
 do_LDA_imm, 	// 0xA9
 do_TAX_impl, 	// 0xAA
 do_NOP_impl, 	// 0xAB
@@ -393,7 +587,7 @@ do_NOP_impl, 	// 0xC4
 do_NOP_impl, 	// 0xC5
 do_NOP_impl, 	// 0xC6
 do_NOP_impl, 	// 0xC7
-do_NOP_impl, 	// 0xC8
+do_INY_impl, 	// 0xC8
 do_NOP_impl, 	// 0xC9
 do_NOP_impl, 	// 0xCA
 do_NOP_impl, 	// 0xCB

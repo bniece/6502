@@ -103,16 +103,16 @@ void set_Z(CPU *cpu, byte reg)
 }
 
 void set_C(CPU *cpu, int result)
-// Set or clear carry flag
+// Set or clear carry flag based on result
 {
 	// The C int has the extra bit to make this check easy
-	if (result > 255)
+	if ((result & bit8) == 0)
 	{
-		cpu->SR |= C;
+		cpu->SR &= ~C;
 	}
 	else
 	{
-		cpu->SR &= ~C;
+		cpu->SR |= C;
 	}
 }
 

@@ -51,8 +51,8 @@ int main(int argc, char *argv[])
 
 	// Print new status, stack, memory
 	print_registers(&cpu);
-	printf("\nStack:\n");
-	print_mem_page(mem, stack, cpu.SP);
+	printf("\nZero Page:\n");
+	print_mem_page(mem, 0x00, cpu.SP);
 	printf("\nData:\n");
 	print_mem_page(mem, data, -1);
 

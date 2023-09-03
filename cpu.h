@@ -8,14 +8,15 @@
 #ifndef CPU_H
 #define CPU_H
 
-// Status flags
-#define N 128	// 10000000
-#define V 64	// 01000000
-#define B 16	// 00010000
-#define D 8		// 00001000
-#define I 4		// 00000100
-#define Z 2		// 00000010
-#define C 1		// 00000001
+// Status flags & test bits
+#define N 128		//  10000000
+#define V 64		//  01000000
+#define B 16		//  00010000
+#define D 8			//  00001000
+#define I 4			//  00000100
+#define Z 2			//  00000010
+#define C 1			//  00000001
+#define bit8 256	// 100000000
 
 // Type definitions
 typedef unsigned char byte;
