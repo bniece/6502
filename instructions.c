@@ -344,6 +344,43 @@ void do_INY_impl(CPU *cpu)
 	return;
 }
 
+void do_SBC_zpg(CPU *cpu)
+// Subtract with Carry, zero page addressing
+// 	A, C = A + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "SBC zpg", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	// 	Do the subtraction and update C
+	// 	Set N,V,Z if necessary
+	// 	Store in A
+	byte M = fetch(cpu, addr);
+
+	int result = cpu->A + (~M&0xFF) + ((cpu->SR & C)?1:0);
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_V(cpu, cpu->A, ~M, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return;
+}
+
 void do_INX_impl(CPU *cpu)
 // Increment X register
 {
@@ -363,6 +400,40 @@ void do_INX_impl(CPU *cpu)
 	set_Z(cpu, cpu->X);
 
 	log_op_end(cpu, cpu->X, ncycles);
+
+	return;
+}
+
+void do_SBC_imm(CPU *cpu)
+// Subtract with Carry, immediate addressing
+// 	A, C = A + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "SBC # ", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	// 	Do the subtraction and update C
+	// 	Set N,V,Z if necessary
+	// 	Store in A
+	byte M = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	int result = cpu->A + (~M&0xFF) + ((cpu->SR & C)?1:0);
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_V(cpu, cpu->A, ~M, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return;
 }
@@ -616,11 +687,11 @@ do_NOP_impl, 	// 0xE1
 do_NOP_impl, 	// 0xE2
 do_NOP_impl, 	// 0xE3
 do_NOP_impl, 	// 0xE4
-do_NOP_impl, 	// 0xE5
+do_SBC_zpg, 	// 0xE5
 do_NOP_impl, 	// 0xE6
 do_NOP_impl, 	// 0xE7
 do_INX_impl, 	// 0xE8
-do_NOP_impl, 	// 0xE9
+do_SBC_imm, 	// 0xE9
 do_NOP_impl, 	// 0xEA
 do_NOP_impl, 	// 0xEB
 do_NOP_impl, 	// 0xEC

@@ -228,11 +228,11 @@ do_NOP_impl, 	// 0xE1
 do_NOP_impl, 	// 0xE2
 do_NOP_impl, 	// 0xE3
 do_NOP_impl, 	// 0xE4
-do_NOP_impl, 	// 0xE5
+do_SBC_zpg, 	// 0xE5
 do_NOP_impl, 	// 0xE6
 do_NOP_impl, 	// 0xE7
 do_INX_impl, 	// 0xE8
-do_NOP_impl, 	// 0xE9
+do_SBC_imm, 	// 0xE9
 do_NOP_impl, 	// 0xEA
 do_NOP_impl, 	// 0xEB
 do_NOP_impl, 	// 0xEC
