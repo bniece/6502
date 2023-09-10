@@ -178,6 +178,29 @@ void do_STA_zpg(CPU *cpu)
 	return;
 }
 
+void do_DEY_impl(CPU *cpu)
+// Decrement Y register
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "DEY   ", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: Decrement Y
+	// 	set N,Z if necessary
+	cpu->Y--;
+
+	set_N(cpu, cpu->Y);
+	set_Z(cpu, cpu->Y);
+
+	log_op_end(cpu, cpu->Y, ncycles);
+
+	return;
+}
+
 void do_TXA_impl(CPU *cpu)
 // Transfer X to Accumulator
 {
@@ -312,6 +335,29 @@ void do_TAX_impl(CPU *cpu)
 	// Cycle 1: copy byte from A to X
 	// 	set N,Z if necessary
 	cpu->X = cpu->A;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return;
+}
+
+void do_DEX_impl(CPU *cpu)
+// Decrement X register
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "DEX   ", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: Decrement X
+	// 	set N,Z if necessary
+	cpu->X--;
 
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
@@ -594,7 +640,7 @@ do_NOP_impl, 	// 0x84
 do_STA_zpg, 	// 0x85
 do_NOP_impl, 	// 0x86
 do_NOP_impl, 	// 0x87
-do_NOP_impl, 	// 0x88
+do_DEY_impl, 	// 0x88
 do_NOP_impl, 	// 0x89
 do_TXA_impl, 	// 0x8A
 do_NOP_impl, 	// 0x8B
@@ -660,7 +706,7 @@ do_NOP_impl, 	// 0xC6
 do_NOP_impl, 	// 0xC7
 do_INY_impl, 	// 0xC8
 do_NOP_impl, 	// 0xC9
-do_NOP_impl, 	// 0xCA
+do_DEX_impl, 	// 0xCA
 do_NOP_impl, 	// 0xCB
 do_NOP_impl, 	// 0xCC
 do_NOP_impl, 	// 0xCD

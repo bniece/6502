@@ -7,4 +7,9 @@ STX abs
 CPX imm
 BNE (?)
 
+multiplication
+division
+square root
+sort
+remove from list
 Simple TTY I/O -- interrupt on keypress, write to buffer for output

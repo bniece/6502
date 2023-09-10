@@ -135,7 +135,7 @@ do_NOP_impl, 	// 0x84
 do_STA_zpg, 	// 0x85
 do_NOP_impl, 	// 0x86
 do_NOP_impl, 	// 0x87
-do_NOP_impl, 	// 0x88
+do_DEY_impl, 	// 0x88
 do_NOP_impl, 	// 0x89
 do_TXA_impl, 	// 0x8A
 do_NOP_impl, 	// 0x8B
@@ -201,7 +201,7 @@ do_NOP_impl, 	// 0xC6
 do_NOP_impl, 	// 0xC7
 do_INY_impl, 	// 0xC8
 do_NOP_impl, 	// 0xC9
-do_NOP_impl, 	// 0xCA
+do_DEX_impl, 	// 0xCA
 do_NOP_impl, 	// 0xCB
 do_NOP_impl, 	// 0xCC
 do_NOP_impl, 	// 0xCD
