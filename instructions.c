@@ -155,6 +155,29 @@ void do_ADC_imm(CPU *cpu)
 	return;
 }
 
+void do_STY_zpg(CPU *cpu)
+// Store Y register in memory with absolute addressing
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "STY zpg", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  store Y at addr
+	cpu->mem[addr] = cpu->Y;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return;
+}
+
 void do_STA_zpg(CPU *cpu)
 // Store Accumulator in memory with absolute addressing
 {
@@ -172,6 +195,29 @@ void do_STA_zpg(CPU *cpu)
 
 	// Cycle 2:  store A at addr
 	cpu->mem[addr] = cpu->A;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return;
+}
+
+void do_STX_zpg(CPU *cpu)
+// Store X registe in memory with absolute addressing
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "STX zpg", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  store X at addr
+	cpu->mem[addr] = cpu->X;
 
 	log_op_end(cpu, cpu->mem[addr], ncycles);
 
@@ -224,6 +270,33 @@ void do_TXA_impl(CPU *cpu)
 	return;
 }
 
+void do_STY_abs(CPU *cpu)
+// Store Y register in memory with absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "STY abs", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3:  store Y at addr
+	cpu->mem[addr] = cpu->Y;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return;
+}
+
 void do_STA_abs(CPU *cpu)
 // Store Accumulator in memory with absolute addressing
 {
@@ -251,6 +324,33 @@ void do_STA_abs(CPU *cpu)
 	return;
 }
 
+void do_STX_abs(CPU *cpu)
+// Store X register in memory with absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "STX abs", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3:  store X at addr
+	cpu->mem[addr] = cpu->X;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return;
+}
+
 void do_TYA_impl(CPU *cpu)
 // Transfer Y to Accumulator
 {
@@ -270,6 +370,54 @@ void do_TYA_impl(CPU *cpu)
 	set_Z(cpu, cpu->A);
 
 	log_op_end(cpu, cpu->A, ncycles);
+
+	return;
+}
+
+void do_LDY_imm(CPU *cpu)
+// Load Y register with immediate addressing
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "LDY # ", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and store in Y, increment PC
+	// 	set N,Z if necessary
+	cpu->Y = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	set_N(cpu, cpu->Y);
+	set_Z(cpu, cpu->Y);
+
+	log_op_end(cpu, cpu->Y, ncycles);
+
+	return;
+}
+
+void do_LDX_imm(CPU *cpu)
+// Load X register with immediate addressing
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "LDX # ", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and store in X, increment PC
+	// 	set N,Z if necessary
+	cpu->X = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	log_op_end(cpu, cpu->X, ncycles);
 
 	return;
 }
@@ -636,17 +784,17 @@ do_NOP_impl, 	// 0x80
 do_NOP_impl, 	// 0x81
 do_NOP_impl, 	// 0x82
 do_NOP_impl, 	// 0x83
-do_NOP_impl, 	// 0x84
+do_STY_zpg, 	// 0x84
 do_STA_zpg, 	// 0x85
-do_NOP_impl, 	// 0x86
+do_STX_zpg, 	// 0x86
 do_NOP_impl, 	// 0x87
 do_DEY_impl, 	// 0x88
 do_NOP_impl, 	// 0x89
 do_TXA_impl, 	// 0x8A
 do_NOP_impl, 	// 0x8B
-do_NOP_impl, 	// 0x8C
+do_STY_abs, 	// 0x8C
 do_STA_abs, 	// 0x8D
-do_NOP_impl, 	// 0x8E
+do_STX_abs, 	// 0x8E
 do_NOP_impl, 	// 0x8F
 do_NOP_impl, 	// 0x90
 do_NOP_impl, 	// 0x91
@@ -664,9 +812,9 @@ do_NOP_impl, 	// 0x9C
 do_NOP_impl, 	// 0x9D
 do_NOP_impl, 	// 0x9E
 do_NOP_impl, 	// 0x9F
-do_NOP_impl, 	// 0xA0
+do_LDY_imm, 	// 0xA0
 do_NOP_impl, 	// 0xA1
-do_NOP_impl, 	// 0xA2
+do_LDX_imm, 	// 0xA2
 do_NOP_impl, 	// 0xA3
 do_NOP_impl, 	// 0xA4
 do_NOP_impl, 	// 0xA5

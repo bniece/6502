@@ -1,9 +1,5 @@
 Instructions to add:
-SBC imm, SBC zpg
 
-LDX imm
-DEX
-STX abs
 CPX imm
 BNE (?)
 
