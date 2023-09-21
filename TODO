@@ -1,11 +1,12 @@
 Instructions to add:
 
-CPX imm
-BNE (?)
 
+16-bit addition
 multiplication
 division
 square root
-sort
+sort -- bubble, quick
 remove from list
 Simple TTY I/O -- interrupt on keypress, write to buffer for output
+
+Code placement, data placement, data export

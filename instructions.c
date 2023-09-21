@@ -538,6 +538,124 @@ void do_INY_impl(CPU *cpu)
 	return;
 }
 
+void do_CMP_imm(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = A + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "CMP # ", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
+	byte M = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	int result = cpu->A + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return;
+}
+
+void do_BNE_rel(CPU *cpu)
+// Branch on result not zero
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "BNE rel", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	byte M = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	//	Add offset to program counter if Z = 0
+	//		Branch adds 1 cycle		
+	if ((cpu->SR & Z) == 0)
+	{
+		ncycles += 1;
+
+		int ADL = (cpu->PC & 0xFF) + M;
+		int ADH = (cpu->PC & 0xFF00)>>8;
+
+
+		// Check for crossing page boundary, add 1 cycle if so
+		//		Page crossed when (carry XOR sign of M) is true
+		if ((ADL & bit8)>>8 != (M & N)>>7)
+		{
+			ncycles += 1;
+
+			// Increment ADH if carry is set
+			if ((ADL & bit8) != 0)
+			{
+				ADH += 1;
+			}
+			// or decrement ADH if carry is cleared
+			else
+			{
+				ADH -= 1;
+			}
+
+		}
+
+		// Store new address in PC
+		// 	Mask halves to clear out any carry bits
+		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
+	}
+
+	log_op_end(cpu, M, ncycles);
+
+	return;
+}
+
+void do_CPX_imm(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = X + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "CPX # ", nbytes);
+
+	// Cycle 0: fetch instruction and increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
+	byte M = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	int result = cpu->X + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return;
+}
+
 void do_SBC_zpg(CPU *cpu)
 // Subtract with Carry, zero page addressing
 // 	A, C = A + ~M + C
@@ -853,14 +971,14 @@ do_NOP_impl, 	// 0xC5
 do_NOP_impl, 	// 0xC6
 do_NOP_impl, 	// 0xC7
 do_INY_impl, 	// 0xC8
-do_NOP_impl, 	// 0xC9
+do_CMP_imm, 	// 0xC9
 do_DEX_impl, 	// 0xCA
 do_NOP_impl, 	// 0xCB
 do_NOP_impl, 	// 0xCC
 do_NOP_impl, 	// 0xCD
 do_NOP_impl, 	// 0xCE
 do_NOP_impl, 	// 0xCF
-do_NOP_impl, 	// 0xD0
+do_BNE_rel, 	// 0xD0
 do_NOP_impl, 	// 0xD1
 do_NOP_impl, 	// 0xD2
 do_NOP_impl, 	// 0xD3
@@ -876,7 +994,7 @@ do_NOP_impl, 	// 0xDC
 do_NOP_impl, 	// 0xDD
 do_NOP_impl, 	// 0xDE
 do_NOP_impl, 	// 0xDF
-do_NOP_impl, 	// 0xE0
+do_CPX_imm, 	// 0xE0
 do_NOP_impl, 	// 0xE1
 do_NOP_impl, 	// 0xE2
 do_NOP_impl, 	// 0xE3
