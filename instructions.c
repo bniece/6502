@@ -4,6 +4,9 @@
 // 	Instruction structure and functions
 //
 // Brian K. Niece
+//
+// Note:  The functions in this file are in pseudo-alphabetical order,
+// 	not in opcode order like in the header
 
 #include <stdio.h>
 
@@ -16,7 +19,7 @@ void log_op_start(CPU *cpu, char *op, int bytes)
 }
 
 void log_op_end(CPU *cpu, byte result, int cycles)
-// Print operation result & status register, count cycles
+// Count cycles, print operation result & status register
 {
 	for (cpu->TC = 0; cpu->TC < cycles; cpu->TC++)
 	{
@@ -37,55 +40,6 @@ void log_op_end(CPU *cpu, byte result, int cycles)
 	printf("\n");
 }
 
-void do_BRK_impl(CPU *cpu)
-// This is not a correct implementation of this instruction.  It's
-// just a convenient way to end programs
-{
-	int nbytes = 1;
-	int ncycles = 7;
-
-	log_op_start(cpu, "BRK   ", nbytes);
-	log_op_end(cpu, 0, ncycles);
-}
-
-void do_CLC_impl(CPU *cpu)
-// Clear Carry flag
-{
-	int nbytes = 1;
-	int ncycles = 2;
-
-	log_op_start(cpu, "CLC   ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: Clear C
-	cpu->SR &= ~C;
-
-	log_op_end(cpu, cpu->SR, ncycles);
-
-	return;
-}
-
-void do_SEC_impl(CPU *cpu)
-// Set Carry flag
-{
-	int nbytes = 1;
-	int ncycles = 2;
-
-	log_op_start(cpu, "SEC   ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: Set C
-	cpu->SR |= C;
-
-	log_op_end(cpu, cpu->SR, ncycles);
-
-	return;
-}
-
 void do_ADC_zpg(CPU *cpu)
 // Add with Carry, zero page addressing
 // 	A, C = A + M + C
@@ -95,7 +49,7 @@ void do_ADC_zpg(CPU *cpu)
 
 	log_op_start(cpu, "ADC zpg", nbytes);
 
-	// Cycle 0: fetch instruction and increment PC
+	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
 
 	// Cycle 1: fetch zpg address and increment PC
@@ -131,7 +85,7 @@ void do_ADC_imm(CPU *cpu)
 
 	log_op_start(cpu, "ADC # ", nbytes);
 
-	// Cycle 0: fetch instruction and increment PC
+	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
 
 	// Cycle 1: fetch byte and increment PC
@@ -155,421 +109,6 @@ void do_ADC_imm(CPU *cpu)
 	return;
 }
 
-void do_STY_zpg(CPU *cpu)
-// Store Y register in memory with absolute addressing
-{
-	int nbytes = 2;
-	int ncycles = 3;
-
-	log_op_start(cpu, "STY zpg", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-	
-	// Cycle 1: fetch zpg address, incement PC
-	word addr = fetch(cpu, cpu->PC);
-	cpu->PC++;
-
-	// Cycle 2:  store Y at addr
-	cpu->mem[addr] = cpu->Y;
-
-	log_op_end(cpu, cpu->mem[addr], ncycles);
-
-	return;
-}
-
-void do_STA_zpg(CPU *cpu)
-// Store Accumulator in memory with absolute addressing
-{
-	int nbytes = 2;
-	int ncycles = 3;
-
-	log_op_start(cpu, "STA zpg", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-	
-	// Cycle 1: fetch zpg address, incement PC
-	word addr = fetch(cpu, cpu->PC);
-	cpu->PC++;
-
-	// Cycle 2:  store A at addr
-	cpu->mem[addr] = cpu->A;
-
-	log_op_end(cpu, cpu->mem[addr], ncycles);
-
-	return;
-}
-
-void do_STX_zpg(CPU *cpu)
-// Store X registe in memory with absolute addressing
-{
-	int nbytes = 2;
-	int ncycles = 3;
-
-	log_op_start(cpu, "STX zpg", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-	
-	// Cycle 1: fetch zpg address, incement PC
-	word addr = fetch(cpu, cpu->PC);
-	cpu->PC++;
-
-	// Cycle 2:  store X at addr
-	cpu->mem[addr] = cpu->X;
-
-	log_op_end(cpu, cpu->mem[addr], ncycles);
-
-	return;
-}
-
-void do_DEY_impl(CPU *cpu)
-// Decrement Y register
-{
-	int nbytes = 1;
-	int ncycles = 2;
-
-	log_op_start(cpu, "DEY   ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: Decrement Y
-	// 	set N,Z if necessary
-	cpu->Y--;
-
-	set_N(cpu, cpu->Y);
-	set_Z(cpu, cpu->Y);
-
-	log_op_end(cpu, cpu->Y, ncycles);
-
-	return;
-}
-
-void do_TXA_impl(CPU *cpu)
-// Transfer X to Accumulator
-{
-	int nbytes = 1;
-	int ncycles = 2;
-
-	log_op_start(cpu, "TXA   ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: copy byte from X to A
-	// 	set N,Z if necessary
-	cpu->A = cpu->X;
-
-	set_N(cpu, cpu->A);
-	set_Z(cpu, cpu->A);
-
-	log_op_end(cpu, cpu->A, ncycles);
-
-	return;
-}
-
-void do_STY_abs(CPU *cpu)
-// Store Y register in memory with absolute addressing
-{
-	int nbytes = 3;
-	int ncycles = 4;
-
-	log_op_start(cpu, "STY abs", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-	
-	// Cycle 1: fetch low byte of address, incement PC
-	word addr = fetch(cpu, cpu->PC);
-	cpu->PC++;
-
-	// Cycle 2:  fetch high byte of address, increment PC
-	addr = addr + (fetch(cpu, cpu->PC) << 8);
-	cpu->PC++;
-
-	// Cycle 3:  store Y at addr
-	cpu->mem[addr] = cpu->Y;
-
-	log_op_end(cpu, cpu->mem[addr], ncycles);
-
-	return;
-}
-
-void do_STA_abs(CPU *cpu)
-// Store Accumulator in memory with absolute addressing
-{
-	int nbytes = 3;
-	int ncycles = 4;
-
-	log_op_start(cpu, "STA abs", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-	
-	// Cycle 1: fetch low byte of address, incement PC
-	word addr = fetch(cpu, cpu->PC);
-	cpu->PC++;
-
-	// Cycle 2:  fetch high byte of address, increment PC
-	addr = addr + (fetch(cpu, cpu->PC) << 8);
-	cpu->PC++;
-
-	// Cycle 3:  store A at addr
-	cpu->mem[addr] = cpu->A;
-
-	log_op_end(cpu, cpu->mem[addr], ncycles);
-
-	return;
-}
-
-void do_STX_abs(CPU *cpu)
-// Store X register in memory with absolute addressing
-{
-	int nbytes = 3;
-	int ncycles = 4;
-
-	log_op_start(cpu, "STX abs", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-	
-	// Cycle 1: fetch low byte of address, incement PC
-	word addr = fetch(cpu, cpu->PC);
-	cpu->PC++;
-
-	// Cycle 2:  fetch high byte of address, increment PC
-	addr = addr + (fetch(cpu, cpu->PC) << 8);
-	cpu->PC++;
-
-	// Cycle 3:  store X at addr
-	cpu->mem[addr] = cpu->X;
-
-	log_op_end(cpu, cpu->mem[addr], ncycles);
-
-	return;
-}
-
-void do_TYA_impl(CPU *cpu)
-// Transfer Y to Accumulator
-{
-	int nbytes = 1;
-	int ncycles = 2;
-
-	log_op_start(cpu, "TYA   ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: copy byte from Y to A
-	// 	set N,Z if necessary
-	cpu->A = cpu->Y;
-
-	set_N(cpu, cpu->A);
-	set_Z(cpu, cpu->A);
-
-	log_op_end(cpu, cpu->A, ncycles);
-
-	return;
-}
-
-void do_LDY_imm(CPU *cpu)
-// Load Y register with immediate addressing
-{
-	int nbytes = 2;
-	int ncycles = 2;
-
-	log_op_start(cpu, "LDY # ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: fetch byte and store in Y, increment PC
-	// 	set N,Z if necessary
-	cpu->Y = fetch(cpu, cpu->PC);
-	cpu->PC++;
-
-	set_N(cpu, cpu->Y);
-	set_Z(cpu, cpu->Y);
-
-	log_op_end(cpu, cpu->Y, ncycles);
-
-	return;
-}
-
-void do_LDX_imm(CPU *cpu)
-// Load X register with immediate addressing
-{
-	int nbytes = 2;
-	int ncycles = 2;
-
-	log_op_start(cpu, "LDX # ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: fetch byte and store in X, increment PC
-	// 	set N,Z if necessary
-	cpu->X = fetch(cpu, cpu->PC);
-	cpu->PC++;
-
-	set_N(cpu, cpu->X);
-	set_Z(cpu, cpu->X);
-
-	log_op_end(cpu, cpu->X, ncycles);
-
-	return;
-}
-
-void do_TAY_impl(CPU *cpu)
-// Transfer Accumulator to Y
-{
-	int nbytes = 1;
-	int ncycles = 2;
-
-	log_op_start(cpu, "TAY   ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: copy byte from A to Y
-	// 	set N,Z if necessary
-	cpu->Y = cpu->A;
-
-	set_N(cpu, cpu->Y);
-	set_Z(cpu, cpu->Y);
-
-	log_op_end(cpu, cpu->Y, ncycles);
-
-	return;
-}
-
-void do_LDA_imm(CPU *cpu)
-// Load Accumulator with immediate addressing
-{
-	int nbytes = 2;
-	int ncycles = 2;
-
-	log_op_start(cpu, "LDA # ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: fetch byte and store in A, increment PC
-	// 	set N,Z if necessary
-	cpu->A = fetch(cpu, cpu->PC);
-	cpu->PC++;
-
-	set_N(cpu, cpu->A);
-	set_Z(cpu, cpu->A);
-
-	log_op_end(cpu, cpu->A, ncycles);
-
-	return;
-}
-
-void do_TAX_impl(CPU *cpu)
-// Transfer Accumulator to X
-{
-	int nbytes = 1;
-	int ncycles = 2;
-
-	log_op_start(cpu, "TAX   ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: copy byte from A to X
-	// 	set N,Z if necessary
-	cpu->X = cpu->A;
-
-	set_N(cpu, cpu->X);
-	set_Z(cpu, cpu->X);
-
-	log_op_end(cpu, cpu->X, ncycles);
-
-	return;
-}
-
-void do_DEX_impl(CPU *cpu)
-// Decrement X register
-{
-	int nbytes = 1;
-	int ncycles = 2;
-
-	log_op_start(cpu, "DEX   ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: Decrement X
-	// 	set N,Z if necessary
-	cpu->X--;
-
-	set_N(cpu, cpu->X);
-	set_Z(cpu, cpu->X);
-
-	log_op_end(cpu, cpu->X, ncycles);
-
-	return;
-}
-
-void do_INY_impl(CPU *cpu)
-// Increment Y register
-{
-	int nbytes = 1;
-	int ncycles = 2;
-
-	log_op_start(cpu, "INY   ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: Increment Y
-	// 	set N,Z if necessary
-	cpu->Y++;
-
-	set_N(cpu, cpu->Y);
-	set_Z(cpu, cpu->Y);
-
-	log_op_end(cpu, cpu->Y, ncycles);
-
-	return;
-}
-
-void do_CMP_imm(CPU *cpu)
-// Subtract but don't update A, set Z, C, N
-// 	Z,C,N = A + ~M + C
-{
-	int nbytes = 2;
-	int ncycles = 2;
-
-	log_op_start(cpu, "CMP # ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: fetch byte and increment PC
-	// 	Do the subtraction and update C
-	// 	Set N,Z if necessary
-	byte M = fetch(cpu, cpu->PC);
-	cpu->PC++;
-
-	int result = cpu->A + (~M&0xFF) + 1;
-	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
-	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
-	//		twos complement
-	set_C(cpu, result);
-
-	set_N(cpu, result);
-	set_Z(cpu, result);
-
-	log_op_end(cpu, cpu->A, ncycles);
-
-	return;
-}
-
 void do_BNE_rel(CPU *cpu)
 // Branch on result not zero
 {
@@ -578,7 +117,7 @@ void do_BNE_rel(CPU *cpu)
 
 	log_op_start(cpu, "BNE rel", nbytes);
 
-	// Cycle 0: fetch instruction and increment PC
+	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
 
 	// Cycle 1: fetch byte and increment PC
@@ -624,6 +163,68 @@ void do_BNE_rel(CPU *cpu)
 	return;
 }
 
+void do_BRK_impl(CPU *cpu)
+// This is not a correct implementation of this instruction.  It's
+// just a convenient way to end programs
+{
+	int nbytes = 1;
+	int ncycles = 7;
+
+	log_op_start(cpu, "BRK   ", nbytes);
+	log_op_end(cpu, 0, ncycles);
+}
+
+void do_CLC_impl(CPU *cpu)
+// Clear Carry flag
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "CLC   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Clear C
+	cpu->SR &= ~C;
+
+	log_op_end(cpu, cpu->SR, ncycles);
+
+	return;
+}
+
+void do_CMP_imm(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = A + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "CMP # ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
+	byte M = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	int result = cpu->A + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return;
+}
+
 void do_CPX_imm(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = X + ~M + C
@@ -633,7 +234,7 @@ void do_CPX_imm(CPU *cpu)
 
 	log_op_start(cpu, "CPX # ", nbytes);
 
-	// Cycle 0: fetch instruction and increment PC
+	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
 
 	// Cycle 1: fetch byte and increment PC
@@ -656,6 +257,188 @@ void do_CPX_imm(CPU *cpu)
 	return;
 }
 
+void do_DEX_impl(CPU *cpu)
+// Decrement X register
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "DEX   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Decrement X
+	// 	set N,Z if necessary
+	cpu->X--;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return;
+}
+
+void do_DEY_impl(CPU *cpu)
+// Decrement Y register
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "DEY   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Decrement Y
+	// 	set N,Z if necessary
+	cpu->Y--;
+
+	set_N(cpu, cpu->Y);
+	set_Z(cpu, cpu->Y);
+
+	log_op_end(cpu, cpu->Y, ncycles);
+
+	return;
+}
+
+void do_INX_impl(CPU *cpu)
+// Increment X register
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "INX   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Increment X
+	// 	set N,Z if necessary
+	cpu->X++;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return;
+}
+
+void do_INY_impl(CPU *cpu)
+// Increment Y register
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "INY   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Increment Y
+	// 	set N,Z if necessary
+	cpu->Y++;
+
+	set_N(cpu, cpu->Y);
+	set_Z(cpu, cpu->Y);
+
+	log_op_end(cpu, cpu->Y, ncycles);
+
+	return;
+}
+
+void do_LDA_imm(CPU *cpu)
+// Load Accumulator with immediate addressing
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "LDA # ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and store in A, increment PC
+	// 	set N,Z if necessary
+	cpu->A = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	set_N(cpu, cpu->A);
+	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return;
+}
+
+void do_LDX_imm(CPU *cpu)
+// Load X register with immediate addressing
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "LDX # ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and store in X, increment PC
+	// 	set N,Z if necessary
+	cpu->X = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return;
+}
+
+void do_LDY_imm(CPU *cpu)
+// Load Y register with immediate addressing
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "LDY # ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and store in Y, increment PC
+	// 	set N,Z if necessary
+	cpu->Y = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	set_N(cpu, cpu->Y);
+	set_Z(cpu, cpu->Y);
+
+	log_op_end(cpu, cpu->Y, ncycles);
+
+	return;
+}
+
+void do_NOP_impl(CPU *cpu)
+// No operation
+{
+	int nbytes = 1;
+	int ncycles = 2;
+	
+	log_op_start(cpu, "NOP   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Do nothing
+	
+	log_op_end(cpu, 0, ncycles);
+
+	return;
+}
+
 void do_SBC_zpg(CPU *cpu)
 // Subtract with Carry, zero page addressing
 // 	A, C = A + ~M + C
@@ -665,7 +448,7 @@ void do_SBC_zpg(CPU *cpu)
 
 	log_op_start(cpu, "SBC zpg", nbytes);
 
-	// Cycle 0: fetch instruction and increment PC
+	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
 
 	// Cycle 1: fetch zpg address and increment PC
@@ -693,29 +476,6 @@ void do_SBC_zpg(CPU *cpu)
 	return;
 }
 
-void do_INX_impl(CPU *cpu)
-// Increment X register
-{
-	int nbytes = 1;
-	int ncycles = 2;
-
-	log_op_start(cpu, "INX   ", nbytes);
-
-	// Cycle 0: fetch instruction and increment PC
-	cpu->PC++;
-
-	// Cycle 1: Increment X
-	// 	set N,Z if necessary
-	cpu->X++;
-
-	set_N(cpu, cpu->X);
-	set_Z(cpu, cpu->X);
-
-	log_op_end(cpu, cpu->X, ncycles);
-
-	return;
-}
-
 void do_SBC_imm(CPU *cpu)
 // Subtract with Carry, immediate addressing
 // 	A, C = A + ~M + C
@@ -725,7 +485,7 @@ void do_SBC_imm(CPU *cpu)
 
 	log_op_start(cpu, "SBC # ", nbytes);
 
-	// Cycle 0: fetch instruction and increment PC
+	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
 
 	// Cycle 1: fetch byte and increment PC
@@ -750,20 +510,263 @@ void do_SBC_imm(CPU *cpu)
 	return;
 }
 
-void do_NOP_impl(CPU *cpu)
-// No operation
+void do_SEC_impl(CPU *cpu)
+// Set Carry flag
 {
 	int nbytes = 1;
 	int ncycles = 2;
-	
-	log_op_start(cpu, "NOP   ", nbytes);
 
-	// Cycle 0: fetch instruction and increment PC
+	log_op_start(cpu, "SEC   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
 
-	// Cycle 1: Do nothing
+	// Cycle 1: Set C
+	cpu->SR |= C;
+
+	log_op_end(cpu, cpu->SR, ncycles);
+
+	return;
+}
+
+void do_STA_zpg(CPU *cpu)
+// Store Accumulator in memory with absolute addressing
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "STA zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
 	
-	log_op_end(cpu, 0, ncycles);
+	// Cycle 1: fetch zpg address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  store A at addr
+	cpu->mem[addr] = cpu->A;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return;
+}
+
+void do_STA_abs(CPU *cpu)
+// Store Accumulator in memory with absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "STA abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3:  store A at addr
+	cpu->mem[addr] = cpu->A;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return;
+}
+
+void do_STX_zpg(CPU *cpu)
+// Store X registe in memory with absolute addressing
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "STX zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  store X at addr
+	cpu->mem[addr] = cpu->X;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return;
+}
+
+void do_STX_abs(CPU *cpu)
+// Store X register in memory with absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "STX abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3:  store X at addr
+	cpu->mem[addr] = cpu->X;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return;
+}
+
+void do_STY_zpg(CPU *cpu)
+// Store Y register in memory with absolute addressing
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "STY zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  store Y at addr
+	cpu->mem[addr] = cpu->Y;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return;
+}
+
+void do_STY_abs(CPU *cpu)
+// Store Y register in memory with absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "STY abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3:  store Y at addr
+	cpu->mem[addr] = cpu->Y;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return;
+}
+
+void do_TAX_impl(CPU *cpu)
+// Transfer Accumulator to X
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "TAX   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: copy byte from A to X
+	// 	set N,Z if necessary
+	cpu->X = cpu->A;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return;
+}
+
+void do_TAY_impl(CPU *cpu)
+// Transfer Accumulator to Y
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "TAY   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: copy byte from A to Y
+	// 	set N,Z if necessary
+	cpu->Y = cpu->A;
+
+	set_N(cpu, cpu->Y);
+	set_Z(cpu, cpu->Y);
+
+	log_op_end(cpu, cpu->Y, ncycles);
+
+	return;
+}
+
+void do_TXA_impl(CPU *cpu)
+// Transfer X to Accumulator
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "TXA   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: copy byte from X to A
+	// 	set N,Z if necessary
+	cpu->A = cpu->X;
+
+	set_N(cpu, cpu->A);
+	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return;
+}
+
+void do_TYA_impl(CPU *cpu)
+// Transfer Y to Accumulator
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "TYA   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: copy byte from Y to A
+	// 	set N,Z if necessary
+	cpu->A = cpu->Y;
+
+	set_N(cpu, cpu->A);
+	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return;
 }
