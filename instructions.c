@@ -109,6 +109,222 @@ void do_ADC_imm(CPU *cpu)
 	return;
 }
 
+void do_BCC_rel(CPU *cpu)
+// Branch on carry clear
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "BCC rel", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	byte M = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	//	Add offset to program counter if C = 0
+	//		Branch adds 1 cycle		
+	if ((cpu->SR & C) == 0)
+	{
+		ncycles += 1;
+
+		int ADL = (cpu->PC & 0xFF) + M;
+		int ADH = (cpu->PC & 0xFF00)>>8;
+
+
+		// Check for crossing page boundary, add 1 cycle if so
+		//		Page crossed when (carry XOR sign of M) is true
+		if ((ADL & bit8)>>8 != (M & N)>>7)
+		{
+			ncycles += 1;
+
+			// Increment ADH if carry is set
+			if ((ADL & bit8) != 0)
+			{
+				ADH += 1;
+			}
+			// or decrement ADH if carry is cleared
+			else
+			{
+				ADH -= 1;
+			}
+
+		}
+
+		// Store new address in PC
+		// 	Mask halves to clear out any carry bits
+		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
+	}
+
+	log_op_end(cpu, M, ncycles);
+
+	return;
+}
+
+void do_BCS_rel(CPU *cpu)
+// Branch on carry set
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "BCS rel", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	byte M = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	//	Add offset to program counter if C = 1
+	//		Branch adds 1 cycle		
+	if ((cpu->SR & C) == C)
+	{
+		ncycles += 1;
+
+		int ADL = (cpu->PC & 0xFF) + M;
+		int ADH = (cpu->PC & 0xFF00)>>8;
+
+
+		// Check for crossing page boundary, add 1 cycle if so
+		//		Page crossed when (carry XOR sign of M) is true
+		if ((ADL & bit8)>>8 != (M & N)>>7)
+		{
+			ncycles += 1;
+
+			// Increment ADH if carry is set
+			if ((ADL & bit8) != 0)
+			{
+				ADH += 1;
+			}
+			// or decrement ADH if carry is cleared
+			else
+			{
+				ADH -= 1;
+			}
+
+		}
+
+		// Store new address in PC
+		// 	Mask halves to clear out any carry bits
+		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
+	}
+
+	log_op_end(cpu, M, ncycles);
+
+	return;
+}
+
+void do_BEQ_rel(CPU *cpu)
+// Branch on result equal t0 zero
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "BEQ rel", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	byte M = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	//	Add offset to program counter if Z = 1
+	//		Branch adds 1 cycle		
+	if ((cpu->SR & Z) == Z)
+	{
+		ncycles += 1;
+
+		int ADL = (cpu->PC & 0xFF) + M;
+		int ADH = (cpu->PC & 0xFF00)>>8;
+
+
+		// Check for crossing page boundary, add 1 cycle if so
+		//		Page crossed when (carry XOR sign of M) is true
+		if ((ADL & bit8)>>8 != (M & N)>>7)
+		{
+			ncycles += 1;
+
+			// Increment ADH if carry is set
+			if ((ADL & bit8) != 0)
+			{
+				ADH += 1;
+			}
+			// or decrement ADH if carry is cleared
+			else
+			{
+				ADH -= 1;
+			}
+
+		}
+
+		// Store new address in PC
+		// 	Mask halves to clear out any carry bits
+		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
+	}
+
+	log_op_end(cpu, M, ncycles);
+
+	return;
+}
+
+void do_BMI_rel(CPU *cpu)
+// Branch on result minus
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "BMI rel", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	byte M = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	//	Add offset to program counter if N = 1
+	//		Branch adds 1 cycle		
+	if ((cpu->SR & N) == N)
+	{
+		ncycles += 1;
+
+		int ADL = (cpu->PC & 0xFF) + M;
+		int ADH = (cpu->PC & 0xFF00)>>8;
+
+
+		// Check for crossing page boundary, add 1 cycle if so
+		//		Page crossed when (carry XOR sign of M) is true
+		if ((ADL & bit8)>>8 != (M & N)>>7)
+		{
+			ncycles += 1;
+
+			// Increment ADH if carry is set
+			if ((ADL & bit8) != 0)
+			{
+				ADH += 1;
+			}
+			// or decrement ADH if carry is cleared
+			else
+			{
+				ADH -= 1;
+			}
+
+		}
+
+		// Store new address in PC
+		// 	Mask halves to clear out any carry bits
+		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
+	}
+
+	log_op_end(cpu, M, ncycles);
+
+	return;
+}
+
 void do_BNE_rel(CPU *cpu)
 // Branch on result not zero
 {
@@ -163,6 +379,60 @@ void do_BNE_rel(CPU *cpu)
 	return;
 }
 
+void do_BPL_rel(CPU *cpu)
+// Branch on result plus
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "BPL rel", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	byte M = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	//	Add offset to program counter if N = 0
+	//		Branch adds 1 cycle		
+	if ((cpu->SR & N) == 0)
+	{
+		ncycles += 1;
+
+		int ADL = (cpu->PC & 0xFF) + M;
+		int ADH = (cpu->PC & 0xFF00)>>8;
+
+
+		// Check for crossing page boundary, add 1 cycle if so
+		//		Page crossed when (carry XOR sign of M) is true
+		if ((ADL & bit8)>>8 != (M & N)>>7)
+		{
+			ncycles += 1;
+
+			// Increment ADH if carry is set
+			if ((ADL & bit8) != 0)
+			{
+				ADH += 1;
+			}
+			// or decrement ADH if carry is cleared
+			else
+			{
+				ADH -= 1;
+			}
+
+		}
+
+		// Store new address in PC
+		// 	Mask halves to clear out any carry bits
+		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
+	}
+
+	log_op_end(cpu, M, ncycles);
+
+	return;
+}
+
 void do_BRK_impl(CPU *cpu)
 // This is not a correct implementation of this instruction.  It's
 // just a convenient way to end programs
@@ -172,6 +442,114 @@ void do_BRK_impl(CPU *cpu)
 
 	log_op_start(cpu, "BRK   ", nbytes);
 	log_op_end(cpu, 0, ncycles);
+}
+
+void do_BVC_rel(CPU *cpu)
+// Branch on overflow clear
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "BVC rel", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	byte M = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	//	Add offset to program counter if V = 0
+	//		Branch adds 1 cycle		
+	if ((cpu->SR & V) == 0)
+	{
+		ncycles += 1;
+
+		int ADL = (cpu->PC & 0xFF) + M;
+		int ADH = (cpu->PC & 0xFF00)>>8;
+
+
+		// Check for crossing page boundary, add 1 cycle if so
+		//		Page crossed when (carry XOR sign of M) is true
+		if ((ADL & bit8)>>8 != (M & N)>>7)
+		{
+			ncycles += 1;
+
+			// Increment ADH if carry is set
+			if ((ADL & bit8) != 0)
+			{
+				ADH += 1;
+			}
+			// or decrement ADH if carry is cleared
+			else
+			{
+				ADH -= 1;
+			}
+
+		}
+
+		// Store new address in PC
+		// 	Mask halves to clear out any carry bits
+		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
+	}
+
+	log_op_end(cpu, M, ncycles);
+
+	return;
+}
+
+void do_BVS_rel(CPU *cpu)
+// Branch on overflow set
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "BVS rel", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	byte M = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	//	Add offset to program counter if V = 0
+	//		Branch adds 1 cycle		
+	if ((cpu->SR & V) == V)
+	{
+		ncycles += 1;
+
+		int ADL = (cpu->PC & 0xFF) + M;
+		int ADH = (cpu->PC & 0xFF00)>>8;
+
+
+		// Check for crossing page boundary, add 1 cycle if so
+		//		Page crossed when (carry XOR sign of M) is true
+		if ((ADL & bit8)>>8 != (M & N)>>7)
+		{
+			ncycles += 1;
+
+			// Increment ADH if carry is set
+			if ((ADL & bit8) != 0)
+			{
+				ADH += 1;
+			}
+			// or decrement ADH if carry is cleared
+			else
+			{
+				ADH -= 1;
+			}
+
+		}
+
+		// Store new address in PC
+		// 	Mask halves to clear out any carry bits
+		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
+	}
+
+	log_op_end(cpu, M, ncycles);
+
+	return;
 }
 
 void do_CLC_impl(CPU *cpu)
@@ -789,7 +1167,7 @@ do_NOP_impl, 	// 0x0C
 do_NOP_impl, 	// 0x0D
 do_NOP_impl, 	// 0x0E
 do_NOP_impl, 	// 0x0F
-do_NOP_impl, 	// 0x10
+do_BPL_rel, 	// 0x10
 do_NOP_impl, 	// 0x11
 do_NOP_impl, 	// 0x12
 do_NOP_impl, 	// 0x13
@@ -821,7 +1199,7 @@ do_NOP_impl, 	// 0x2C
 do_NOP_impl, 	// 0x2D
 do_NOP_impl, 	// 0x2E
 do_NOP_impl, 	// 0x2F
-do_NOP_impl, 	// 0x30
+do_BMI_rel, 	// 0x30
 do_NOP_impl, 	// 0x31
 do_NOP_impl, 	// 0x32
 do_NOP_impl, 	// 0x33
@@ -853,7 +1231,7 @@ do_NOP_impl, 	// 0x4C
 do_NOP_impl, 	// 0x4D
 do_NOP_impl, 	// 0x4E
 do_NOP_impl, 	// 0x4F
-do_NOP_impl, 	// 0x50
+do_BVC_rel, 	// 0x50
 do_NOP_impl, 	// 0x51
 do_NOP_impl, 	// 0x52
 do_NOP_impl, 	// 0x53
@@ -885,7 +1263,7 @@ do_NOP_impl, 	// 0x6C
 do_NOP_impl, 	// 0x6D
 do_NOP_impl, 	// 0x6E
 do_NOP_impl, 	// 0x6F
-do_NOP_impl, 	// 0x70
+do_BVS_rel, 	// 0x70
 do_NOP_impl, 	// 0x71
 do_NOP_impl, 	// 0x72
 do_NOP_impl, 	// 0x73
@@ -917,7 +1295,7 @@ do_STY_abs, 	// 0x8C
 do_STA_abs, 	// 0x8D
 do_STX_abs, 	// 0x8E
 do_NOP_impl, 	// 0x8F
-do_NOP_impl, 	// 0x90
+do_BCC_rel, 	// 0x90
 do_NOP_impl, 	// 0x91
 do_NOP_impl, 	// 0x92
 do_NOP_impl, 	// 0x93
@@ -949,7 +1327,7 @@ do_NOP_impl, 	// 0xAC
 do_NOP_impl, 	// 0xAD
 do_NOP_impl, 	// 0xAE
 do_NOP_impl, 	// 0xAF
-do_NOP_impl, 	// 0xB0
+do_BCS_rel, 	// 0xB0
 do_NOP_impl, 	// 0xB1
 do_NOP_impl, 	// 0xB2
 do_NOP_impl, 	// 0xB3
@@ -1013,7 +1391,7 @@ do_NOP_impl, 	// 0xEC
 do_NOP_impl, 	// 0xED
 do_NOP_impl, 	// 0xEE
 do_NOP_impl, 	// 0xEF
-do_NOP_impl, 	// 0xF0
+do_BEQ_rel, 	// 0xF0
 do_NOP_impl, 	// 0xF1
 do_NOP_impl, 	// 0xF2
 do_NOP_impl, 	// 0xF3

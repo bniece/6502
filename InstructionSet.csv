@@ -9,7 +9,7 @@ do_NOP_impl, 	// 0x06
 do_NOP_impl, 	// 0x07
 do_NOP_impl, 	// 0x08
 do_NOP_impl, 	// 0x09
-do_NOP_impl, 	// 0x0A
+do_BPL_rel, 	// 0x0A
 do_NOP_impl, 	// 0x0B
 do_NOP_impl, 	// 0x0C
 do_NOP_impl, 	// 0x0D
@@ -47,7 +47,7 @@ do_NOP_impl, 	// 0x2C
 do_NOP_impl, 	// 0x2D
 do_NOP_impl, 	// 0x2E
 do_NOP_impl, 	// 0x2F
-do_NOP_impl, 	// 0x30
+do_BMI_rel, 	// 0x30
 do_NOP_impl, 	// 0x31
 do_NOP_impl, 	// 0x32
 do_NOP_impl, 	// 0x33
@@ -79,7 +79,7 @@ do_NOP_impl, 	// 0x4C
 do_NOP_impl, 	// 0x4D
 do_NOP_impl, 	// 0x4E
 do_NOP_impl, 	// 0x4F
-do_NOP_impl, 	// 0x50
+do_BVC_rel, 	// 0x50
 do_NOP_impl, 	// 0x51
 do_NOP_impl, 	// 0x52
 do_NOP_impl, 	// 0x53
@@ -111,7 +111,7 @@ do_NOP_impl, 	// 0x6C
 do_NOP_impl, 	// 0x6D
 do_NOP_impl, 	// 0x6E
 do_NOP_impl, 	// 0x6F
-do_NOP_impl, 	// 0x70
+do_BVS_rel, 	// 0x70
 do_NOP_impl, 	// 0x71
 do_NOP_impl, 	// 0x72
 do_NOP_impl, 	// 0x73
@@ -143,7 +143,7 @@ do_STY_abs, 	// 0x8C
 do_STA_abs, 	// 0x8D
 do_STX_abs, 	// 0x8E
 do_NOP_impl, 	// 0x8F
-do_NOP_impl, 	// 0x90
+do_BCC_rel, 	// 0x90
 do_NOP_impl, 	// 0x91
 do_NOP_impl, 	// 0x92
 do_NOP_impl, 	// 0x93
@@ -175,7 +175,7 @@ do_NOP_impl, 	// 0xAC
 do_NOP_impl, 	// 0xAD
 do_NOP_impl, 	// 0xAE
 do_NOP_impl, 	// 0xAF
-do_NOP_impl, 	// 0xB0
+do_BCS_rel, 	// 0xB0
 do_NOP_impl, 	// 0xB1
 do_NOP_impl, 	// 0xB2
 do_NOP_impl, 	// 0xB3
@@ -200,14 +200,14 @@ do_NOP_impl, 	// 0xC5
 do_NOP_impl, 	// 0xC6
 do_NOP_impl, 	// 0xC7
 do_INY_impl, 	// 0xC8
-do_NOP_impl, 	// 0xC9
+do_CMP_imm, 	// 0xC9
 do_DEX_impl, 	// 0xCA
 do_NOP_impl, 	// 0xCB
 do_NOP_impl, 	// 0xCC
 do_NOP_impl, 	// 0xCD
 do_NOP_impl, 	// 0xCE
 do_NOP_impl, 	// 0xCF
-do_NOP_impl, 	// 0xD0
+do_BNE_rel, 	// 0xD0
 do_NOP_impl, 	// 0xD1
 do_NOP_impl, 	// 0xD2
 do_NOP_impl, 	// 0xD3
@@ -223,7 +223,7 @@ do_NOP_impl, 	// 0xDC
 do_NOP_impl, 	// 0xDD
 do_NOP_impl, 	// 0xDE
 do_NOP_impl, 	// 0xDF
-do_NOP_impl, 	// 0xE0
+do_CPX_imm, 	// 0xE0
 do_NOP_impl, 	// 0xE1
 do_NOP_impl, 	// 0xE2
 do_NOP_impl, 	// 0xE3
@@ -239,7 +239,7 @@ do_NOP_impl, 	// 0xEC
 do_NOP_impl, 	// 0xED
 do_NOP_impl, 	// 0xEE
 do_NOP_impl, 	// 0xEF
-do_NOP_impl, 	// 0xF0
+do_BEQ_rel, 	// 0xF0
 do_NOP_impl, 	// 0xF1
 do_NOP_impl, 	// 0xF2
 do_NOP_impl, 	// 0xF3
