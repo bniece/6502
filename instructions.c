@@ -908,7 +908,7 @@ void do_SEC_impl(CPU *cpu)
 }
 
 void do_STA_zpg(CPU *cpu)
-// Store Accumulator in memory with absolute addressing
+// Store Accumulator in memory with zero page addressing
 {
 	int nbytes = 2;
 	int ncycles = 3;
@@ -919,8 +919,34 @@ void do_STA_zpg(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	word addr = fetch(cpu, cpu->PC);
+	byte addr = fetch(cpu, cpu->PC);
 	cpu->PC++;
+
+	// Cycle 2:  store A at addr
+	cpu->mem[addr] = cpu->A;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return;
+}
+
+void do_STA_zpgX(CPU *cpu)
+// Store Accumulator in memory with X-indexed zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "STA zpg,X", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
 
 	// Cycle 2:  store A at addr
 	cpu->mem[addr] = cpu->A;
@@ -1300,7 +1326,7 @@ do_NOP_impl, 	// 0x91
 do_NOP_impl, 	// 0x92
 do_NOP_impl, 	// 0x93
 do_NOP_impl, 	// 0x94
-do_NOP_impl, 	// 0x95
+do_STA_zpgX, 	// 0x95
 do_NOP_impl, 	// 0x96
 do_NOP_impl, 	// 0x97
 do_TYA_impl, 	// 0x98

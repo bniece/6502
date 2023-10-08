@@ -33,6 +33,7 @@ void do_STY_abs(CPU *cpu);		// 0x8c
 void do_STA_abs(CPU *cpu);		// 0x8D
 void do_STX_abs(CPU *cpu);		// 0x8E
 void do_BCC_rel(CPU *cpu);		// 0x90
+void do_STA_zpgX(CPU *cpu);	// 0x95
 void do_TYA_impl(CPU *cpu);	// 0x98
 void do_LDY_imm(CPU *cpu);		// 0xA0
 void do_LDX_imm(CPU *cpu);		// 0xA2
