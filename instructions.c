@@ -15,7 +15,7 @@
 void log_op_start(CPU *cpu, char *op, int bytes)
 {
 // Print operation address, mnemonic, and bytes consumed
-	printf("0x%04X %s\t(%d bytes) ", cpu->PC, op, bytes);
+	printf("0x%04X %-9s (%d bytes) ", cpu->PC, op, bytes);
 }
 
 void log_op_end(CPU *cpu, byte result, int cycles)

@@ -1,0 +1,1 @@
+copy makefile.msvc makefile
