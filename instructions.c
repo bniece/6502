@@ -40,7 +40,7 @@ void log_op_end(CPU *cpu, byte result, int cycles)
 	printf("\n");
 }
 
-void do_ADC_zpg(CPU *cpu)
+int do_ADC_zpg(CPU *cpu)
 // Add with Carry, zero page addressing
 // 	A, C = A + M + C
 {
@@ -73,10 +73,10 @@ void do_ADC_zpg(CPU *cpu)
 
 	log_op_end(cpu, cpu->A, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_ADC_imm(CPU *cpu)
+int do_ADC_imm(CPU *cpu)
 // Add with Carry, immediate addressing
 // 	A, C = A + M + C
 {
@@ -106,10 +106,10 @@ void do_ADC_imm(CPU *cpu)
 
 	log_op_end(cpu, cpu->A, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_BCC_rel(CPU *cpu)
+int do_BCC_rel(CPU *cpu)
 // Branch on carry clear
 {
 	int nbytes = 2;
@@ -160,10 +160,10 @@ void do_BCC_rel(CPU *cpu)
 
 	log_op_end(cpu, M, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_BCS_rel(CPU *cpu)
+int do_BCS_rel(CPU *cpu)
 // Branch on carry set
 {
 	int nbytes = 2;
@@ -214,10 +214,10 @@ void do_BCS_rel(CPU *cpu)
 
 	log_op_end(cpu, M, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_BEQ_rel(CPU *cpu)
+int do_BEQ_rel(CPU *cpu)
 // Branch on result equal t0 zero
 {
 	int nbytes = 2;
@@ -268,10 +268,10 @@ void do_BEQ_rel(CPU *cpu)
 
 	log_op_end(cpu, M, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_BMI_rel(CPU *cpu)
+int do_BMI_rel(CPU *cpu)
 // Branch on result minus
 {
 	int nbytes = 2;
@@ -322,10 +322,10 @@ void do_BMI_rel(CPU *cpu)
 
 	log_op_end(cpu, M, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_BNE_rel(CPU *cpu)
+int do_BNE_rel(CPU *cpu)
 // Branch on result not zero
 {
 	int nbytes = 2;
@@ -376,10 +376,10 @@ void do_BNE_rel(CPU *cpu)
 
 	log_op_end(cpu, M, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_BPL_rel(CPU *cpu)
+int do_BPL_rel(CPU *cpu)
 // Branch on result plus
 {
 	int nbytes = 2;
@@ -430,10 +430,10 @@ void do_BPL_rel(CPU *cpu)
 
 	log_op_end(cpu, M, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_BRK_impl(CPU *cpu)
+int do_BRK_impl(CPU *cpu)
 // This is not a correct implementation of this instruction.  It's
 // just a convenient way to end programs
 {
@@ -442,9 +442,11 @@ void do_BRK_impl(CPU *cpu)
 
 	log_op_start(cpu, "BRK   ", nbytes);
 	log_op_end(cpu, 0, ncycles);
+
+	return ncycles;
 }
 
-void do_BVC_rel(CPU *cpu)
+int do_BVC_rel(CPU *cpu)
 // Branch on overflow clear
 {
 	int nbytes = 2;
@@ -495,10 +497,10 @@ void do_BVC_rel(CPU *cpu)
 
 	log_op_end(cpu, M, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_BVS_rel(CPU *cpu)
+int do_BVS_rel(CPU *cpu)
 // Branch on overflow set
 {
 	int nbytes = 2;
@@ -549,10 +551,10 @@ void do_BVS_rel(CPU *cpu)
 
 	log_op_end(cpu, M, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_CLC_impl(CPU *cpu)
+int do_CLC_impl(CPU *cpu)
 // Clear Carry flag
 {
 	int nbytes = 1;
@@ -568,10 +570,10 @@ void do_CLC_impl(CPU *cpu)
 
 	log_op_end(cpu, cpu->SR, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_CMP_imm(CPU *cpu)
+int do_CMP_imm(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = A + ~M + C
 {
@@ -600,10 +602,10 @@ void do_CMP_imm(CPU *cpu)
 
 	log_op_end(cpu, cpu->A, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_CPX_imm(CPU *cpu)
+int do_CPX_imm(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = X + ~M + C
 {
@@ -632,10 +634,10 @@ void do_CPX_imm(CPU *cpu)
 
 	log_op_end(cpu, cpu->X, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_DEX_impl(CPU *cpu)
+int do_DEX_impl(CPU *cpu)
 // Decrement X register
 {
 	int nbytes = 1;
@@ -655,10 +657,10 @@ void do_DEX_impl(CPU *cpu)
 
 	log_op_end(cpu, cpu->X, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_DEY_impl(CPU *cpu)
+int do_DEY_impl(CPU *cpu)
 // Decrement Y register
 {
 	int nbytes = 1;
@@ -678,10 +680,10 @@ void do_DEY_impl(CPU *cpu)
 
 	log_op_end(cpu, cpu->Y, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_INX_impl(CPU *cpu)
+int do_INX_impl(CPU *cpu)
 // Increment X register
 {
 	int nbytes = 1;
@@ -701,10 +703,10 @@ void do_INX_impl(CPU *cpu)
 
 	log_op_end(cpu, cpu->X, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_INY_impl(CPU *cpu)
+int do_INY_impl(CPU *cpu)
 // Increment Y register
 {
 	int nbytes = 1;
@@ -724,10 +726,10 @@ void do_INY_impl(CPU *cpu)
 
 	log_op_end(cpu, cpu->Y, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_LDA_imm(CPU *cpu)
+int do_LDA_imm(CPU *cpu)
 // Load Accumulator with immediate addressing
 {
 	int nbytes = 2;
@@ -748,10 +750,98 @@ void do_LDA_imm(CPU *cpu)
 
 	log_op_end(cpu, cpu->A, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_LDX_imm(CPU *cpu)
+int do_LDA_abs(CPU *cpu)
+// Load Accumulator with absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "LDA abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3:  store byte in A
+	// 	Set N,Z if necessary
+	cpu->A = cpu->mem[addr];
+
+	set_N(cpu, cpu->A);
+	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_LDA_zpg(CPU *cpu)
+// Load Accumulator with zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "LDA zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  store byte in A
+	// 	Set N,Z if necessary
+	cpu->A = cpu->mem[addr];
+
+	set_N(cpu, cpu->A);
+	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_LDA_zpgX(CPU *cpu)
+// Load Accumulator with X-indexed zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "LDA zpg,X", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3:  store byte in A
+	// 	Set N,Z if necessary
+	cpu->A = cpu->mem[addr];
+
+	set_N(cpu, cpu->A);
+	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_LDX_imm(CPU *cpu)
 // Load X register with immediate addressing
 {
 	int nbytes = 2;
@@ -772,10 +862,98 @@ void do_LDX_imm(CPU *cpu)
 
 	log_op_end(cpu, cpu->X, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_LDY_imm(CPU *cpu)
+int do_LDX_abs(CPU *cpu)
+// Load X register with absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "LDX abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3:  store byte in X
+	// 	Set N,Z if necessary
+	cpu->X = cpu->mem[addr];
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return ncycles;
+}
+
+int do_LDX_zpg(CPU *cpu)
+// Load X register with zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "LDX zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  store byte in X
+	// 	Set N,Z if necessary
+	cpu->X = cpu->mem[addr];
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return ncycles;
+}
+
+int do_LDX_zpgY(CPU *cpu)
+// Load X register with Y-indexed zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "LDX zpg,Y", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add Y to address
+	addr = addr + cpu->Y;
+
+	// Cycle 3:  store byte in X
+	// 	Set N,Z if necessary
+	cpu->X = cpu->mem[addr];
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return ncycles;
+}
+
+int do_LDY_imm(CPU *cpu)
 // Load Y register with immediate addressing
 {
 	int nbytes = 2;
@@ -796,10 +974,98 @@ void do_LDY_imm(CPU *cpu)
 
 	log_op_end(cpu, cpu->Y, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_NOP_impl(CPU *cpu)
+int do_LDY_abs(CPU *cpu)
+// Load Y register with absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "LDY abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3:  store byte in Y
+	// 	Set N,Z if necessary
+	cpu->Y = cpu->mem[addr];
+
+	set_N(cpu, cpu->Y);
+	set_Z(cpu, cpu->Y);
+
+	log_op_end(cpu, cpu->Y, ncycles);
+
+	return ncycles;
+}
+
+int do_LDY_zpg(CPU *cpu)
+// Load Y register with zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "LDY zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  store byte in Y
+	// 	Set N,Z if necessary
+	cpu->Y = cpu->mem[addr];
+
+	set_N(cpu, cpu->Y);
+	set_Z(cpu, cpu->Y);
+
+	log_op_end(cpu, cpu->Y, ncycles);
+
+	return ncycles;
+}
+
+int do_LDY_zpgX(CPU *cpu)
+// Load Y register with X-indexed zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "LDY zpg,X", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3:  store byte in Y
+	// 	Set N,Z if necessary
+	cpu->Y = cpu->mem[addr];
+
+	set_N(cpu, cpu->Y);
+	set_Z(cpu, cpu->Y);
+
+	log_op_end(cpu, cpu->Y, ncycles);
+
+	return ncycles;
+}
+
+int do_NOP_impl(CPU *cpu)
 // No operation
 {
 	int nbytes = 1;
@@ -814,10 +1080,10 @@ void do_NOP_impl(CPU *cpu)
 	
 	log_op_end(cpu, 0, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_SBC_zpg(CPU *cpu)
+int do_SBC_zpg(CPU *cpu)
 // Subtract with Carry, zero page addressing
 // 	A, C = A + ~M + C
 {
@@ -851,10 +1117,10 @@ void do_SBC_zpg(CPU *cpu)
 
 	log_op_end(cpu, cpu->A, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_SBC_imm(CPU *cpu)
+int do_SBC_imm(CPU *cpu)
 // Subtract with Carry, immediate addressing
 // 	A, C = A + ~M + C
 {
@@ -885,10 +1151,10 @@ void do_SBC_imm(CPU *cpu)
 
 	log_op_end(cpu, cpu->A, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_SEC_impl(CPU *cpu)
+int do_SEC_impl(CPU *cpu)
 // Set Carry flag
 {
 	int nbytes = 1;
@@ -904,59 +1170,10 @@ void do_SEC_impl(CPU *cpu)
 
 	log_op_end(cpu, cpu->SR, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_STA_zpg(CPU *cpu)
-// Store Accumulator in memory with zero page addressing
-{
-	int nbytes = 2;
-	int ncycles = 3;
-
-	log_op_start(cpu, "STA zpg", nbytes);
-
-	// Cycle 0: instruction fetched, increment PC
-	cpu->PC++;
-	
-	// Cycle 1: fetch zpg address, incement PC
-	byte addr = fetch(cpu, cpu->PC);
-	cpu->PC++;
-
-	// Cycle 2:  store A at addr
-	cpu->mem[addr] = cpu->A;
-
-	log_op_end(cpu, cpu->mem[addr], ncycles);
-
-	return;
-}
-
-void do_STA_zpgX(CPU *cpu)
-// Store Accumulator in memory with X-indexed zero page addressing
-{
-	int nbytes = 2;
-	int ncycles = 4;
-
-	log_op_start(cpu, "STA zpg,X", nbytes);
-
-	// Cycle 0: instruction fetched, increment PC
-	cpu->PC++;
-	
-	// Cycle 1: fetch zpg address, incement PC
-	byte addr = fetch(cpu, cpu->PC);
-	cpu->PC++;
-
-	// Cycle 2: Add X to address
-	addr = addr + cpu->X;
-
-	// Cycle 2:  store A at addr
-	cpu->mem[addr] = cpu->A;
-
-	log_op_end(cpu, cpu->mem[addr], ncycles);
-
-	return;
-}
-
-void do_STA_abs(CPU *cpu)
+int do_STA_abs(CPU *cpu)
 // Store Accumulator in memory with absolute addressing
 {
 	int nbytes = 3;
@@ -980,33 +1197,59 @@ void do_STA_abs(CPU *cpu)
 
 	log_op_end(cpu, cpu->mem[addr], ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_STX_zpg(CPU *cpu)
-// Store X registe in memory with absolute addressing
+int do_STA_zpg(CPU *cpu)
+// Store Accumulator in memory with zero page addressing
 {
 	int nbytes = 2;
 	int ncycles = 3;
 
-	log_op_start(cpu, "STX zpg", nbytes);
+	log_op_start(cpu, "STA zpg", nbytes);
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	word addr = fetch(cpu, cpu->PC);
+	byte addr = fetch(cpu, cpu->PC);
 	cpu->PC++;
 
-	// Cycle 2:  store X at addr
-	cpu->mem[addr] = cpu->X;
+	// Cycle 2:  store A at addr
+	cpu->mem[addr] = cpu->A;
 
 	log_op_end(cpu, cpu->mem[addr], ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_STX_abs(CPU *cpu)
+int do_STA_zpgX(CPU *cpu)
+// Store Accumulator in memory with X-indexed zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "STA zpg,X", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 2:  store A at addr
+	cpu->mem[addr] = cpu->A;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return ncycles;
+}
+
+int do_STX_abs(CPU *cpu)
 // Store X register in memory with absolute addressing
 {
 	int nbytes = 3;
@@ -1030,16 +1273,16 @@ void do_STX_abs(CPU *cpu)
 
 	log_op_end(cpu, cpu->mem[addr], ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_STY_zpg(CPU *cpu)
-// Store Y register in memory with absolute addressing
+int do_STX_zpg(CPU *cpu)
+// Store X register in memory with zero page addressing
 {
 	int nbytes = 2;
 	int ncycles = 3;
 
-	log_op_start(cpu, "STY zpg", nbytes);
+	log_op_start(cpu, "STX zpg", nbytes);
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1048,15 +1291,41 @@ void do_STY_zpg(CPU *cpu)
 	word addr = fetch(cpu, cpu->PC);
 	cpu->PC++;
 
-	// Cycle 2:  store Y at addr
-	cpu->mem[addr] = cpu->Y;
+	// Cycle 2:  store X at addr
+	cpu->mem[addr] = cpu->X;
 
 	log_op_end(cpu, cpu->mem[addr], ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_STY_abs(CPU *cpu)
+int do_STX_zpgY(CPU *cpu)
+// Store X register in memory with Y-indexed zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "STX zpg,Y", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add Y to address
+	addr = addr + cpu->Y;
+
+	// Cycle 3:  store X at addr
+	cpu->mem[addr] = cpu->X;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return ncycles;
+}
+
+int do_STY_abs(CPU *cpu)
 // Store Y register in memory with absolute addressing
 {
 	int nbytes = 3;
@@ -1080,10 +1349,59 @@ void do_STY_abs(CPU *cpu)
 
 	log_op_end(cpu, cpu->mem[addr], ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_TAX_impl(CPU *cpu)
+int do_STY_zpg(CPU *cpu)
+// Store Y register in memory with absolute addressing
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "STY zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	word addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  store Y at addr
+	cpu->mem[addr] = cpu->Y;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return ncycles;
+}
+
+int do_STY_zpgX(CPU *cpu)
+// Store Y register in memory with X-indexed zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "STY zpg,X", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3:  store Y at addr
+	cpu->mem[addr] = cpu->Y;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return ncycles;
+}
+
+int do_TAX_impl(CPU *cpu)
 // Transfer Accumulator to X
 {
 	int nbytes = 1;
@@ -1103,10 +1421,10 @@ void do_TAX_impl(CPU *cpu)
 
 	log_op_end(cpu, cpu->X, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_TAY_impl(CPU *cpu)
+int do_TAY_impl(CPU *cpu)
 // Transfer Accumulator to Y
 {
 	int nbytes = 1;
@@ -1126,10 +1444,10 @@ void do_TAY_impl(CPU *cpu)
 
 	log_op_end(cpu, cpu->Y, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_TXA_impl(CPU *cpu)
+int do_TXA_impl(CPU *cpu)
 // Transfer X to Accumulator
 {
 	int nbytes = 1;
@@ -1149,10 +1467,10 @@ void do_TXA_impl(CPU *cpu)
 
 	log_op_end(cpu, cpu->A, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void do_TYA_impl(CPU *cpu)
+int do_TYA_impl(CPU *cpu)
 // Transfer Y to Accumulator
 {
 	int nbytes = 1;
@@ -1172,10 +1490,10 @@ void do_TYA_impl(CPU *cpu)
 
 	log_op_end(cpu, cpu->A, ncycles);
 
-	return;
+	return ncycles;
 }
 
-void (*execute[])(CPU *cpu) =
+int (*execute[])(CPU *cpu) =
 {
 do_BRK_impl, 	// 0x00
 do_NOP_impl, 	// 0x01
@@ -1325,9 +1643,9 @@ do_BCC_rel, 	// 0x90
 do_NOP_impl, 	// 0x91
 do_NOP_impl, 	// 0x92
 do_NOP_impl, 	// 0x93
-do_NOP_impl, 	// 0x94
+do_STY_zpgX, 	// 0x94
 do_STA_zpgX, 	// 0x95
-do_NOP_impl, 	// 0x96
+do_STX_zpgY, 	// 0x96
 do_NOP_impl, 	// 0x97
 do_TYA_impl, 	// 0x98
 do_NOP_impl, 	// 0x99
@@ -1341,25 +1659,25 @@ do_LDY_imm, 	// 0xA0
 do_NOP_impl, 	// 0xA1
 do_LDX_imm, 	// 0xA2
 do_NOP_impl, 	// 0xA3
-do_NOP_impl, 	// 0xA4
-do_NOP_impl, 	// 0xA5
-do_NOP_impl, 	// 0xA6
+do_LDY_zpg, 	// 0xA4
+do_LDA_zpg, 	// 0xA5
+do_LDX_zpg, 	// 0xA6
 do_NOP_impl, 	// 0xA7
 do_TAY_impl, 	// 0xA8
 do_LDA_imm, 	// 0xA9
 do_TAX_impl, 	// 0xAA
 do_NOP_impl, 	// 0xAB
-do_NOP_impl, 	// 0xAC
-do_NOP_impl, 	// 0xAD
-do_NOP_impl, 	// 0xAE
+do_LDY_abs, 	// 0xAC
+do_LDA_abs, 	// 0xAD
+do_LDX_abs, 	// 0xAE
 do_NOP_impl, 	// 0xAF
 do_BCS_rel, 	// 0xB0
 do_NOP_impl, 	// 0xB1
 do_NOP_impl, 	// 0xB2
 do_NOP_impl, 	// 0xB3
-do_NOP_impl, 	// 0xB4
-do_NOP_impl, 	// 0xB5
-do_NOP_impl, 	// 0xB6
+do_LDY_zpgX, 	// 0xB4
+do_LDA_zpgX, 	// 0xB5
+do_LDX_zpgY, 	// 0xB6
 do_NOP_impl, 	// 0xB7
 do_NOP_impl, 	// 0xB8
 do_NOP_impl, 	// 0xB9

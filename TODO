@@ -10,3 +10,13 @@ remove from list
 Simple TTY I/O -- interrupt on keypress, write to buffer for output
 
 Code placement, data placement, data export
+
+addressing mode order:
+imm
+abs
+abs,X
+abs,Y
+zpg
+zpg,X
+zpg,X indirect
+zpg indirect,Y

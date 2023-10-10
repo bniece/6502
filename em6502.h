@@ -20,6 +20,6 @@ int import_mem(char *filename, byte *mem, word addr);
 void print_mem_page(byte *mem, word addr, int mark);
 
 // Get array of instruction functions
-extern void (*execute[])(CPU *cpu);
+extern int (*execute[])(CPU *cpu);
 
 #endif

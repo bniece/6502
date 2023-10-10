@@ -13,6 +13,9 @@
 
 int main(int argc, char *argv[])
 {
+	// Track performance
+	int cycleCount = 0;
+
 	// Create processor and memory
 	CPU cpu;
 	byte mem[MAX_MEM];
@@ -46,15 +49,16 @@ int main(int argc, char *argv[])
 	do 
 	{
 		cpu.IR = fetch(&cpu, cpu.PC);
-		execute[cpu.IR](&cpu);
+		cycleCount += execute[cpu.IR](&cpu);
 	} while (cpu.IR != 0x00);
 
-	// Print new status, stack, memory
+	// Print new status, stack, memory, cycles used
 	print_registers(&cpu);
 	printf("\nZero Page:\n");
 	print_mem_page(mem, 0x00, cpu.SP);
 	printf("\nData:\n");
 	print_mem_page(mem, data, -1);
+	printf("\nCycles: %d\n", cycleCount);
 
    return 0;
 }
