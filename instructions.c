@@ -784,6 +784,102 @@ int do_LDA_abs(CPU *cpu)
 	return ncycles;
 }
 
+int do_LDA_absX(CPU *cpu)
+// Load Accumulator with x-indexed absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "LDA absX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add X to low byte
+	// 	increment PC
+	byte bah = fetch(cpu, cpu->PC);
+	bal = bal + cpu->X;
+	cpu->PC++;
+
+	// Cycle 3:  if no carry on bal, load A and be done 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		cpu->A = cpu->mem[addr];
+	}	
+	else //	otherwise, add carry to bah and do load on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 4:  store byte in A
+		word addr = (bah << 8) + bal;
+		cpu->A = cpu->mem[addr]; 
+	}
+
+	// Set N,Z if necessary
+	set_N(cpu, cpu->A);
+	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_LDA_absY(CPU *cpu)
+// Load Accumulator with Y-indexed absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "LDA absY", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add Y to low byte
+	// 	increment PC
+	byte bah = fetch(cpu, cpu->PC);
+	bal = bal + cpu->Y;
+	cpu->PC++;
+
+	// Cycle 3:  if no carry on bal, load A and be done 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		cpu->A = cpu->mem[addr];
+	}	
+	else //	otherwise, add carry to bah and do load on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 4:  store byte in A
+		word addr = (bah << 8) + bal;
+		cpu->A = cpu->mem[addr]; 
+	}
+
+	// Set N,Z if necessary
+	set_N(cpu, cpu->A);
+	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
 int do_LDA_zpg(CPU *cpu)
 // Load Accumulator with zero page addressing
 {
@@ -896,6 +992,54 @@ int do_LDX_abs(CPU *cpu)
 	return ncycles;
 }
 
+int do_LDX_absY(CPU *cpu)
+// Load X register with Y-indexed absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "LDX absY", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add Y to low byte
+	// 	increment PC
+	byte bah = fetch(cpu, cpu->PC);
+	bal = bal + cpu->Y;
+	cpu->PC++;
+
+	// Cycle 3:  if no carry on bal, load X and be done 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		cpu->X = cpu->mem[addr];
+	}	
+	else //	otherwise, add carry to bah and do load on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 4:  store byte in X
+		word addr = (bah << 8) + bal;
+		cpu->X = cpu->mem[addr]; 
+	}
+
+	// Set N,Z if necessary
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return ncycles;
+}
+
 int do_LDX_zpg(CPU *cpu)
 // Load X register with zero page addressing
 {
@@ -1000,6 +1144,54 @@ int do_LDY_abs(CPU *cpu)
 	// 	Set N,Z if necessary
 	cpu->Y = cpu->mem[addr];
 
+	set_N(cpu, cpu->Y);
+	set_Z(cpu, cpu->Y);
+
+	log_op_end(cpu, cpu->Y, ncycles);
+
+	return ncycles;
+}
+
+int do_LDY_absX(CPU *cpu)
+// Load Y register with X-indexed absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "LDY absX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add X to low byte
+	// 	increment PC
+	byte bah = fetch(cpu, cpu->PC);
+	bal = bal + cpu->X;
+	cpu->PC++;
+
+	// Cycle 3:  if no carry on bal, load Y and be done 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		cpu->Y = cpu->mem[addr];
+	}	
+	else //	otherwise, add carry to bah and do load on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 4:  store byte in Y
+		word addr = (bah << 8) + bal;
+		cpu->Y = cpu->mem[addr]; 
+	}
+
+	// Set N,Z if necessary
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
@@ -1193,6 +1385,82 @@ int do_STA_abs(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 3:  store A at addr
+	cpu->mem[addr] = cpu->A;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return ncycles;
+}
+
+int do_STA_absX(CPU *cpu)
+// Store Accumulator in memory with X-indexed absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 5;
+
+	log_op_start(cpu, "STA absX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add X to low byte
+	// 	increment PC
+	byte bah = fetch(cpu, cpu->PC);
+	bal = bal + cpu->X;
+	cpu->PC++;
+
+	// Cycle 3:  add carry to high byte if necessary
+	if (bal > 255)
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+	}
+
+	// Cycle 4:  store A at addr
+	word addr = (bah << 8) + bal;
+	cpu->mem[addr] = cpu->A;
+
+	log_op_end(cpu, cpu->mem[addr], ncycles);
+
+	return ncycles;
+}
+
+int do_STA_absY(CPU *cpu)
+// Store Accumulator in memory with Y-indexed absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 5;
+
+	log_op_start(cpu, "STA absY", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add Y to low byte
+	// 	increment PC
+	byte bah = fetch(cpu, cpu->PC);
+	bal = bal + cpu->Y;
+	cpu->PC++;
+
+	// Cycle 3:  add carry to high byte if necessary
+	if (bal > 255)
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+	}
+
+	// Cycle 4:  store A at addr
+	word addr = (bah << 8) + bal;
 	cpu->mem[addr] = cpu->A;
 
 	log_op_end(cpu, cpu->mem[addr], ncycles);
@@ -1648,11 +1916,11 @@ do_STA_zpgX, 	// 0x95
 do_STX_zpgY, 	// 0x96
 do_NOP_impl, 	// 0x97
 do_TYA_impl, 	// 0x98
-do_NOP_impl, 	// 0x99
+do_STA_absY, 	// 0x99
 do_NOP_impl, 	// 0x9A
 do_NOP_impl, 	// 0x9B
 do_NOP_impl, 	// 0x9C
-do_NOP_impl, 	// 0x9D
+do_STA_absX, 	// 0x9D
 do_NOP_impl, 	// 0x9E
 do_NOP_impl, 	// 0x9F
 do_LDY_imm, 	// 0xA0
@@ -1680,12 +1948,12 @@ do_LDA_zpgX, 	// 0xB5
 do_LDX_zpgY, 	// 0xB6
 do_NOP_impl, 	// 0xB7
 do_NOP_impl, 	// 0xB8
-do_NOP_impl, 	// 0xB9
+do_LDA_absY, 	// 0xB9
 do_NOP_impl, 	// 0xBA
 do_NOP_impl, 	// 0xBB
-do_NOP_impl, 	// 0xBC
-do_NOP_impl, 	// 0xBD
-do_NOP_impl, 	// 0xBE
+do_LDY_absX, 	// 0xBC
+do_LDA_absX, 	// 0xBD
+do_LDX_absY, 	// 0xBE
 do_NOP_impl, 	// 0xBF
 do_NOP_impl, 	// 0xC0
 do_NOP_impl, 	// 0xC1

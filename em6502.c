@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
 	setup(&cpu, mem);
 
 	// Addresses of memory segments for quick reference
+	word zero_page = 0x00;
 	word stack = 0x100;
 	word data = DEF_DATA_ADDR;
 	word code = DEF_CODE_ADDR;
@@ -55,7 +56,9 @@ int main(int argc, char *argv[])
 	// Print new status, stack, memory, cycles used
 	print_registers(&cpu);
 	printf("\nZero Page:\n");
-	print_mem_page(mem, 0x00, cpu.SP);
+	print_mem_page(mem, zero_page, -1);
+	printf("\nStack:\n");
+	print_mem_page(mem, stack, cpu.SP);
 	printf("\nData:\n");
 	print_mem_page(mem, data, -1);
 	printf("\nCycles: %d\n", cycleCount);

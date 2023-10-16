@@ -20,3 +20,26 @@ zpg
 zpg,X
 zpg,X indirect
 zpg indirect,Y
+
+em6502 options:
+c, code-base: page where code starts, default = 0x80
+d, data-base: page where data starts, default = 0x02
+
+p, program-file: code file, default = code.bin
+i, input-file: data file, default = data.bin
+o, output-file: data output file, default = out.bin
+
+C, code-pages: pages of code to print, default = 1
+D, data-pages: pages of data to print (at end of run), default = 1
+S, print-stack: print stack (1, default) or not (0)
+Z, print-zero-page: print zero page (1, default) or not (0)
+
+bkn6502 options:
+p, program-file: code file, default = code.bin
+i, input-file: data file, default = data.bin
+o, output-file: data output file, default = out.bin
+
+c, code-size: number of pages in code file (default = 128/0x80)
+	Code should contain the NMI, RESET, and IRQ/BRK vectors in
+		in addressed 0xfffa - 0xffff.
+	Data will begin with page 0x04 and run up to the beginning of the code
