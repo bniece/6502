@@ -20,9 +20,11 @@ int do_BPL_rel(CPU *cpu);	// 0x10
 int do_CLC_impl(CPU *cpu);	// 0x18
 int do_BMI_rel(CPU *cpu);	// 0x30
 int do_SEC_impl(CPU *cpu);	// 0x38
+int do_JMP_abs(CPU *cpu);	// 0x4C
 int do_BVC_rel(CPU *cpu);	// 0x50
 int do_ADC_zpg(CPU *cpu);	// 0x65
 int do_ADC_imm(CPU *cpu);	// 0x69
+int do_JMP_ind(CPU *cpu);	// 0x6C
 int do_BVS_rel(CPU *cpu);	// 0x70
 int do_STY_zpg(CPU *cpu);	// 0x84
 int do_STA_zpg(CPU *cpu);	// 0x85

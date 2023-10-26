@@ -11,8 +11,8 @@
 
 // Definitions for emulator defaults
 #define MAX_MEM 1024 * 64
-#define DEF_DATA_ADDR 0x200
-#define DEF_CODE_ADDR 0x600
+#define DEF_DATA_ADDR 0x0200
+#define DEF_CODE_ADDR 0x0600
 
 // Memory management funtions
 int import_mem(char *filename, byte *mem, word addr);

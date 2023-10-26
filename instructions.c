@@ -729,6 +729,67 @@ int do_INY_impl(CPU *cpu)
 	return ncycles;
 }
 
+int do_JMP_abs(CPU *cpu)
+// Jump with absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 3;
+
+	log_op_start(cpu, "JMP abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of address, incement PC
+	byte adl = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	//		set PC for jump
+	byte adh = fetch(cpu, cpu->PC);
+	cpu->PC++;
+	cpu->PC = adl + (adh << 8);
+
+	log_op_end(cpu, adl, ncycles);
+
+	return ncycles;
+}
+
+int do_JMP_ind(CPU *cpu)
+// Jump with absolute indirect addressing
+{
+	int nbytes = 3;
+	int ncycles = 5;
+
+	log_op_start(cpu, "JMP ind", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of address location, incement PC
+	byte all = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address location, increment PC
+	byte alh = fetch(cpu, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 3: fetch low byte of address
+	byte adl = fetch(cpu, all + (alh << 8));
+
+	// Cycle 4: fetch high byte of address
+	//		set PC for jump
+	//		This will not cross page boundaries when all = 0xff -- normal 
+	//			behavior for a MOS 6502.
+	all = all + 1;
+	byte adh = fetch(cpu, all + (alh << 8));
+	cpu->PC = adl + (adh << 8);
+
+	log_op_end(cpu, adl, ncycles);
+
+	return ncycles;
+}
+
 int do_LDA_imm(CPU *cpu)
 // Load Accumulator with immediate addressing
 {
@@ -1839,7 +1900,7 @@ do_NOP_impl, 	// 0x48
 do_NOP_impl, 	// 0x49
 do_NOP_impl, 	// 0x4A
 do_NOP_impl, 	// 0x4B
-do_NOP_impl, 	// 0x4C
+do_JMP_abs, 	// 0x4C
 do_NOP_impl, 	// 0x4D
 do_NOP_impl, 	// 0x4E
 do_NOP_impl, 	// 0x4F
@@ -1871,7 +1932,7 @@ do_NOP_impl, 	// 0x68
 do_ADC_imm, 	// 0x69
 do_NOP_impl, 	// 0x6A
 do_NOP_impl, 	// 0x6B
-do_NOP_impl, 	// 0x6C
+do_JMP_ind, 	// 0x6C
 do_NOP_impl, 	// 0x6D
 do_NOP_impl, 	// 0x6E
 do_NOP_impl, 	// 0x6F
