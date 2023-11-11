@@ -40,6 +40,6 @@ i, input-file: data file, default = data.bin
 o, output-file: data output file, default = out.bin
 
 c, code-size: number of pages in code file (default = 128/0x80)
-	Code should contain the NMI, RESET, and IRQ/BRK vectors in
-		in addressed 0xfffa - 0xffff.
+	Code will start at page (0x100 - code-size) and should contain the 
+		NMI, RESET, and IRQ/BRK vectors in addresses 0xfffa - 0xffff.
 	Data will begin with page 0x04 and run up to the beginning of the code
