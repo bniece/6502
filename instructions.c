@@ -1086,7 +1086,8 @@ int do_LDA_indY(CPU *cpu)
 	word bal = fetch(cpu, zad);
 
 	// Cycle 3: fetch high byte of base address, add Y to low byte
-	byte bah = fetch(cpu, zad + 1);
+	zad = zad + 1;
+	byte bah = fetch(cpu, zad);
 	bal = bal + cpu->Y;
 
 	// Cycle 4:  if no carry on bal, load A and be done 
@@ -1747,7 +1748,8 @@ int do_STA_indY(CPU *cpu)
 	word bal = fetch(cpu, zad);
 
 	// Cycle 3: fetch high byte of base address, add Y to low byte
-	byte bah = fetch(cpu, zad + 1);
+	zad = zad + 1;
+	byte bah = fetch(cpu, zad);
 	bal = bal + cpu->Y;
 
 	// Cycle 4: add carry to high byte of address if necessary

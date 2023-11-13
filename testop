@@ -1,0 +1,12 @@
+#!/bin/bash
+
+testfile=asmcode/optests/test_$1.asm
+
+
+rm code.bin
+xa -o code.bin $testfile
+
+./em6502
+
+echo
+head -n `grep '^;' $testfile | wc -l` $testfile
