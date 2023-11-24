@@ -60,6 +60,7 @@ int do_BCS_rel(CPU *cpu);	// 0xB0
 int do_LDY_zpgX(CPU *cpu);	// 0xB4
 int do_LDA_zpgX(CPU *cpu);	// 0xB5
 int do_LDX_zpgY(CPU *cpu);	// 0xB6
+int do_CLV_impl(CPU *cpu);	// 0xB8
 int do_LDA_absY(CPU *cpu);	// 0xB9
 int do_LDY_absX(CPU *cpu);	// 0xBC
 int do_LDA_absX(CPU *cpu);	// 0xBD

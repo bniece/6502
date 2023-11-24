@@ -573,6 +573,25 @@ int do_CLC_impl(CPU *cpu)
 	return ncycles;
 }
 
+int do_CLV_impl(CPU *cpu)
+// Clear Overflow flag
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "CLV   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Clear V
+	cpu->SR &= ~V;
+
+	log_op_end(cpu, cpu->SR, ncycles);
+
+	return ncycles;
+}
+
 int do_CMP_imm(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = A + ~M + C
@@ -2198,7 +2217,7 @@ do_LDY_zpgX, 	// 0xB4
 do_LDA_zpgX, 	// 0xB5
 do_LDX_zpgY, 	// 0xB6
 do_NOP_impl, 	// 0xB7
-do_NOP_impl, 	// 0xB8
+do_CLV_impl, 	// 0xB8
 do_LDA_absY, 	// 0xB9
 do_NOP_impl, 	// 0xBA
 do_NOP_impl, 	// 0xBB
