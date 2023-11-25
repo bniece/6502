@@ -20,6 +20,9 @@ cpu.obj: cpu.c cpu.h
 instructions.obj: instructions.c instructions.h
 	$(CC) $(COPTS) /c instructions.c
 
+membus.obj: membus.c membus.h
+	$(CC) $(COPTS) /c membus.c
+
 all: em6502
 
 install: em6502

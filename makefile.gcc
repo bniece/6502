@@ -24,6 +24,9 @@ cpu.o: cpu.c cpu.h
 instructions.o: instructions.c instructions.h
 	$(CC) $(OPTS) -c instructions.c
 
+membus.o: membus.c membus.h
+	$(CC) $(OPTS) -c membus.c
+
 all: $(ALLTARGETS)
 
 install: all
