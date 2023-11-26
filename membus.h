@@ -29,13 +29,17 @@ typedef struct membus
 	memory_block *wo_blocks;
 } membus;
 
-// I/O functions
+// Bus actions
 byte read(membus bus, word addr);
 void write(membus bus, word addr, byte data);
-void print_blocks(memory_block *blocks);
 
 // Setup Functions
 void initialize_bus(membus *bus);
 void add_block(memory_block **blocks, word begin_addr, word end_addr);
+
+// I/O functions
+int import_mem(char *filename, membus *bus, word addr);
+void print_mem_page(membus *mem, word addr, int mark);
+void print_blocks(memory_block *blocks);
 
 #endif
