@@ -8,6 +8,8 @@
 #ifndef CPU_H
 #define CPU_H
 
+#include "membus.h"
+
 // Status flags & test bits
 #define N 128		//  10000000
 #define V 64		//  01000000
@@ -35,13 +37,12 @@ typedef struct CPU
 	
 	byte SR;			// Processor status register
 	
-	byte *mem;		// Pointer to the memory "bus"
+	membus *bus;	// Pointer to the memory "bus"
 } CPU;
 
 // CPU control functions
-void setup(CPU *cpu, byte *mem);
+void initialize_cpu(CPU *cpu, membus *bus);
 void reset(CPU *cpu);
-byte fetch(CPU *cpu, word addr);
 void set_N(CPU *cpu, byte reg);
 void set_V(CPU *cpu, byte op1, byte op2, byte result);
 void set_Z(CPU *cpu, byte reg);

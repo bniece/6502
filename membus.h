@@ -9,7 +9,7 @@
 #define MEMBUS_H
 
 // Definitions for emulator constants
-#define MAX_MEM 1<<16
+#define MAX_MEM 64*1024
 
 // Type definitions
 typedef unsigned char byte;
@@ -35,7 +35,7 @@ void write(membus bus, word addr, byte data);
 void print_blocks(memory_block *blocks);
 
 // Setup Functions
-void initialize(membus *bus);
+void initialize_bus(membus *bus);
 void add_block(memory_block **blocks, word begin_addr, word end_addr);
 
 #endif

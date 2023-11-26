@@ -34,9 +34,9 @@ void print_blocks(memory_block *blocks)
 
 }
 
-void initialize(membus *bus)
+void initialize_bus(membus *bus)
 {
-	bus->mem = malloc(64 * 1024);
+	bus->mem = malloc(MAX_MEM);
 	bus->ro_blocks = NULL;
 	bus->wo_blocks = NULL;
 }
