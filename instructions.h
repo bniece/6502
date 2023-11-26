@@ -5,10 +5,10 @@
 //
 // Brian K. Niece
 
-#include "em6502.h"
-
 #ifndef INST6502_H
 #define INST6502_H
+
+#include "cpu.h"
 
 // Logging functions
 void log_op_start(CPU *cpu, char *op, int bytes);

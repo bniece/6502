@@ -12,8 +12,8 @@ endif
 
 OPTS = -g -Wall
 
-em6502: em6502.o cpu.o instructions.o
-	$(CC) $(OPTS) -o em6502 em6502.o cpu.o instructions.o
+em6502: em6502.o cpu.o instructions.o membus.o
+	$(CC) $(OPTS) -o em6502 em6502.o cpu.o instructions.o membus.o
 
 em6502.o: em6502.c em6502.h version.h
 	$(CC) $(OPTS) -c em6502.c
@@ -23,6 +23,9 @@ cpu.o: cpu.c cpu.h
 
 instructions.o: instructions.c instructions.h
 	$(CC) $(OPTS) -c instructions.c
+
+membus.o: membus.c membus.h
+	$(CC) $(OPTS) -c membus.c
 
 all: $(ALLTARGETS)
 

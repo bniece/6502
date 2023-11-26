@@ -8,16 +8,14 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "em6502.h"
 #include "cpu.h"
+#include "membus.h"
 
-void setup(CPU *cpu, byte *mem)
-// Set up the "physical" connections of the processor, 
-// 	i.e. link it to its memory.
-// (In the future, can this be made more general -- 
-// 	to connect peripherals, interrupt lines?)
+void initialize_cpu(CPU *cpu, membus *bus)
+// Link the processor to the memory bus so it can access data
+// 	and peripherals
 {
-	cpu->mem = mem;
+	cpu->bus = bus;
 }
 
 void reset(CPU *cpu)
@@ -36,13 +34,7 @@ void reset(CPU *cpu)
 	// 	you should set it yourself, i.e., start your code 
 	// 	with LDX #$FF, TXS
 	// 	and possibly also CLD
-	cpu->PC = fetch(cpu, 0xFFFC) + (fetch(cpu, 0xFFFD) << 8);
-}
-
-byte fetch(CPU *cpu, word addr)
-// Retrieve a byte from the requested address
-{
-	return cpu->mem[addr];
+	cpu->PC = read(*cpu->bus, 0xFFFC) + (read(*cpu->bus, 0xFFFD) << 8);
 }
 
 void set_N(CPU *cpu, byte reg)

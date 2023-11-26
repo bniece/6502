@@ -8,8 +8,8 @@ LOPTS = /DEBUG
 INCDIR = ..\msvc\include
 LIBDIR = ..\msvc\lib
 
-em6502: em6502.obj cpu.obj instructions.obj
-	$(LD) $(LOPTS) /OUT:em6502.exe em6502.obj cpu.obj instructions.obj /LIBPATH:$(LIBDIR) getopt.lib
+em6502: em6502.obj cpu.obj instructions.obj membus.obj
+	$(LD) $(LOPTS) /OUT:em6502.exe em6502.obj cpu.obj instructions.obj membus.obj /LIBPATH:$(LIBDIR) getopt.lib
 
 em6502.obj: em6502.c em6502.h version.h
 	$(CC) $(COPTS) /I$(INCDIR) /c em6502.c
@@ -19,6 +19,9 @@ cpu.obj: cpu.c cpu.h
 
 instructions.obj: instructions.c instructions.h
 	$(CC) $(COPTS) /c instructions.c
+
+membus.obj: membus.c membus.h
+	$(CC) $(COPTS) /c membus.c
 
 all: em6502
 

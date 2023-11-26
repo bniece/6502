@@ -53,14 +53,14 @@ int do_ADC_zpg(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 1: fetch zpg address and increment PC
-	word addr = fetch(cpu, cpu->PC);
+	word addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2: fetch byte
 	// 	Do the addition and update C
 	// 	Set N,V,Z if necessary
 	// 	Store in A
-	byte M = fetch(cpu, addr);
+	byte M = read(*cpu->bus, addr);
 
 	int result = cpu->A + M + ((cpu->SR & C)?1:0);
 	set_C(cpu, result);
@@ -92,7 +92,7 @@ int do_ADC_imm(CPU *cpu)
 	// 	Do the addition and update C
 	// 	Set N,V,Z if necessary
 	// 	Store in A
-	byte M = fetch(cpu, cpu->PC);
+	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	int result = cpu->A + M + ((cpu->SR & C)?1:0);
@@ -121,7 +121,7 @@ int do_BCC_rel(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 1: fetch byte and increment PC
-	byte M = fetch(cpu, cpu->PC);
+	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	//	Add offset to program counter if C = 0
@@ -175,7 +175,7 @@ int do_BCS_rel(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 1: fetch byte and increment PC
-	byte M = fetch(cpu, cpu->PC);
+	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	//	Add offset to program counter if C = 1
@@ -229,7 +229,7 @@ int do_BEQ_rel(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 1: fetch byte and increment PC
-	byte M = fetch(cpu, cpu->PC);
+	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	//	Add offset to program counter if Z = 1
@@ -283,7 +283,7 @@ int do_BMI_rel(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 1: fetch byte and increment PC
-	byte M = fetch(cpu, cpu->PC);
+	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	//	Add offset to program counter if N = 1
@@ -337,7 +337,7 @@ int do_BNE_rel(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 1: fetch byte and increment PC
-	byte M = fetch(cpu, cpu->PC);
+	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	//	Add offset to program counter if Z = 0
@@ -391,7 +391,7 @@ int do_BPL_rel(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 1: fetch byte and increment PC
-	byte M = fetch(cpu, cpu->PC);
+	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	//	Add offset to program counter if N = 0
@@ -458,7 +458,7 @@ int do_BVC_rel(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 1: fetch byte and increment PC
-	byte M = fetch(cpu, cpu->PC);
+	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	//	Add offset to program counter if V = 0
@@ -512,7 +512,7 @@ int do_BVS_rel(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 1: fetch byte and increment PC
-	byte M = fetch(cpu, cpu->PC);
+	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	//	Add offset to program counter if V = 0
@@ -607,7 +607,7 @@ int do_CMP_imm(CPU *cpu)
 	// Cycle 1: fetch byte and increment PC
 	// 	Do the subtraction and update C
 	// 	Set N,Z if necessary
-	byte M = fetch(cpu, cpu->PC);
+	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	int result = cpu->A + (~M&0xFF) + 1;
@@ -639,7 +639,7 @@ int do_CPX_imm(CPU *cpu)
 	// Cycle 1: fetch byte and increment PC
 	// 	Do the subtraction and update C
 	// 	Set N,Z if necessary
-	byte M = fetch(cpu, cpu->PC);
+	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	int result = cpu->X + (~M&0xFF) + 1;
@@ -671,7 +671,7 @@ int do_CPY_imm(CPU *cpu)
 	// Cycle 1: fetch byte and increment PC
 	// 	Do the subtraction and update C
 	// 	Set N,Z if necessary
-	byte M = fetch(cpu, cpu->PC);
+	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	int result = cpu->Y + (~M&0xFF) + 1;
@@ -792,12 +792,12 @@ int do_JMP_abs(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch low byte of address, incement PC
-	byte adl = fetch(cpu, cpu->PC);
+	byte adl = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of address, increment PC
 	//		set PC for jump
-	byte adh = fetch(cpu, cpu->PC);
+	byte adh = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 	cpu->PC = adl + (adh << 8);
 
@@ -818,22 +818,22 @@ int do_JMP_ind(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch low byte of address location, incement PC
-	byte all = fetch(cpu, cpu->PC);
+	byte all = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of address location, increment PC
-	byte alh = fetch(cpu, cpu->PC);
+	byte alh = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 3: fetch low byte of address
-	byte adl = fetch(cpu, all + (alh << 8));
+	byte adl = read(*cpu->bus, all + (alh << 8));
 
 	// Cycle 4: fetch high byte of address
 	//		set PC for jump
 	//		This will not cross page boundaries when all = 0xff -- normal 
 	//			behavior for a MOS 6502.
 	all = all + 1;
-	byte adh = fetch(cpu, all + (alh << 8));
+	byte adh = read(*cpu->bus, all + (alh << 8));
 	cpu->PC = adl + (adh << 8);
 
 	log_op_end(cpu, adl, ncycles);
@@ -854,7 +854,7 @@ int do_LDA_imm(CPU *cpu)
 
 	// Cycle 1: fetch byte and store in A, increment PC
 	// 	set N,Z if necessary
-	cpu->A = fetch(cpu, cpu->PC);
+	cpu->A = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	set_N(cpu, cpu->A);
@@ -877,16 +877,16 @@ int do_LDA_abs(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch low byte of address, incement PC
-	word addr = fetch(cpu, cpu->PC);
+	word addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of address, increment PC
-	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
 	cpu->PC++;
 
 	// Cycle 3:  store byte in A
 	// 	Set N,Z if necessary
-	cpu->A = cpu->mem[addr];
+	cpu->A = read(*cpu->bus, addr);
 
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
@@ -909,12 +909,12 @@ int do_LDA_absX(CPU *cpu)
 
 	// Cycle 1: fetch low byte of base address, incement PC
 	// 	use two bytes for bal so we can catch the carry
-	word bal = fetch(cpu, cpu->PC);
+	word bal = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of base address, add X to low byte
 	// 	increment PC
-	byte bah = fetch(cpu, cpu->PC);
+	byte bah = read(*cpu->bus, cpu->PC);
 	bal = bal + cpu->X;
 	cpu->PC++;
 
@@ -922,7 +922,7 @@ int do_LDA_absX(CPU *cpu)
 	if (bal < 256)
 	{
 		word addr = (bah << 8) + bal;
-		cpu->A = cpu->mem[addr];
+		cpu->A = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and do load on next cycle
 	{
@@ -932,7 +932,7 @@ int do_LDA_absX(CPU *cpu)
 
 		// Cycle 4:  store byte in A
 		word addr = (bah << 8) + bal;
-		cpu->A = cpu->mem[addr]; 
+		cpu->A = read(*cpu->bus, addr);
 	}
 
 	// Set N,Z if necessary
@@ -957,12 +957,12 @@ int do_LDA_absY(CPU *cpu)
 
 	// Cycle 1: fetch low byte of base address, incement PC
 	// 	use two bytes for bal so we can catch the carry
-	word bal = fetch(cpu, cpu->PC);
+	word bal = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of base address, add Y to low byte
 	// 	increment PC
-	byte bah = fetch(cpu, cpu->PC);
+	byte bah = read(*cpu->bus, cpu->PC);
 	bal = bal + cpu->Y;
 	cpu->PC++;
 
@@ -970,7 +970,7 @@ int do_LDA_absY(CPU *cpu)
 	if (bal < 256)
 	{
 		word addr = (bah << 8) + bal;
-		cpu->A = cpu->mem[addr];
+		cpu->A = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and do load on next cycle
 	{
@@ -980,7 +980,7 @@ int do_LDA_absY(CPU *cpu)
 
 		// Cycle 4:  store byte in A
 		word addr = (bah << 8) + bal;
-		cpu->A = cpu->mem[addr]; 
+		cpu->A = read(*cpu->bus, addr);
 	}
 
 	// Set N,Z if necessary
@@ -1004,12 +1004,12 @@ int do_LDA_zpg(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	word addr = fetch(cpu, cpu->PC);
+	word addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  store byte in A
 	// 	Set N,Z if necessary
-	cpu->A = cpu->mem[addr];
+	cpu->A = read(*cpu->bus, addr);
 
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
@@ -1031,7 +1031,7 @@ int do_LDA_zpgX(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	byte addr = fetch(cpu, cpu->PC);
+	byte addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2: Add X to address
@@ -1039,7 +1039,7 @@ int do_LDA_zpgX(CPU *cpu)
 
 	// Cycle 3:  store byte in A
 	// 	Set N,Z if necessary
-	cpu->A = cpu->mem[addr];
+	cpu->A = read(*cpu->bus, addr);
 
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
@@ -1061,22 +1061,22 @@ int do_LDA_Xind(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	byte zad = fetch(cpu, cpu->PC);
+	byte zad = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2: Add X to zpg address
 	zad = zad + cpu->X;
 
 	// Cycle 3: Fetch low byte of address, increment zpg address 
-	byte adl = fetch(cpu, zad);
+	byte adl = read(*cpu->bus, zad);
 	zad = zad + 1;
 
 	// Cycle 4: Fetch high byte of address
-	byte adh = fetch(cpu, zad);
+	byte adh = read(*cpu->bus, zad);
 
 	// Cycle 5:  store byte in A
 	// 	Set N,Z if necessary
-	cpu->A = cpu->mem[(adh << 8) + adl];
+	cpu->A = read(*cpu->bus, (adh << 8) + adl);
 
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
@@ -1098,22 +1098,22 @@ int do_LDA_indY(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 1: fetch zpg address, incement PC
-	byte zad = fetch(cpu, cpu->PC);
+	byte zad = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2: fetch low byte of base address
-	word bal = fetch(cpu, zad);
+	word bal = read(*cpu->bus, zad);
 
 	// Cycle 3: fetch high byte of base address, add Y to low byte
 	zad = zad + 1;
-	byte bah = fetch(cpu, zad);
+	byte bah = read(*cpu->bus, zad);
 	bal = bal + cpu->Y;
 
 	// Cycle 4:  if no carry on bal, load A and be done 
 	if (bal < 256)
 	{
 		word addr = (bah << 8) + bal;
-		cpu->A = cpu->mem[addr];
+		cpu->A = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and do load on next cycle
 	{
@@ -1123,7 +1123,7 @@ int do_LDA_indY(CPU *cpu)
 
 		// Cycle 4:  store byte in A
 		word addr = (bah << 8) + bal;
-		cpu->A = cpu->mem[addr]; 
+		cpu->A = read(*cpu->bus, addr);
 	}
 
 	// Set N,Z if necessary
@@ -1148,7 +1148,7 @@ int do_LDX_imm(CPU *cpu)
 
 	// Cycle 1: fetch byte and store in X, increment PC
 	// 	set N,Z if necessary
-	cpu->X = fetch(cpu, cpu->PC);
+	cpu->X = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	set_N(cpu, cpu->X);
@@ -1171,16 +1171,16 @@ int do_LDX_abs(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch low byte of address, incement PC
-	word addr = fetch(cpu, cpu->PC);
+	word addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of address, increment PC
-	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
 	cpu->PC++;
 
 	// Cycle 3:  store byte in X
 	// 	Set N,Z if necessary
-	cpu->X = cpu->mem[addr];
+	cpu->X = read(*cpu->bus, addr);
 
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
@@ -1203,12 +1203,12 @@ int do_LDX_absY(CPU *cpu)
 
 	// Cycle 1: fetch low byte of base address, incement PC
 	// 	use two bytes for bal so we can catch the carry
-	word bal = fetch(cpu, cpu->PC);
+	word bal = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of base address, add Y to low byte
 	// 	increment PC
-	byte bah = fetch(cpu, cpu->PC);
+	byte bah = read(*cpu->bus, cpu->PC);
 	bal = bal + cpu->Y;
 	cpu->PC++;
 
@@ -1216,7 +1216,7 @@ int do_LDX_absY(CPU *cpu)
 	if (bal < 256)
 	{
 		word addr = (bah << 8) + bal;
-		cpu->X = cpu->mem[addr];
+		cpu->X = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and do load on next cycle
 	{
@@ -1226,7 +1226,7 @@ int do_LDX_absY(CPU *cpu)
 
 		// Cycle 4:  store byte in X
 		word addr = (bah << 8) + bal;
-		cpu->X = cpu->mem[addr]; 
+		cpu->X = read(*cpu->bus, addr);
 	}
 
 	// Set N,Z if necessary
@@ -1250,12 +1250,12 @@ int do_LDX_zpg(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	word addr = fetch(cpu, cpu->PC);
+	word addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  store byte in X
 	// 	Set N,Z if necessary
-	cpu->X = cpu->mem[addr];
+	cpu->X = read(*cpu->bus, addr);
 
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
@@ -1277,7 +1277,7 @@ int do_LDX_zpgY(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	byte addr = fetch(cpu, cpu->PC);
+	byte addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2: Add Y to address
@@ -1285,7 +1285,7 @@ int do_LDX_zpgY(CPU *cpu)
 
 	// Cycle 3:  store byte in X
 	// 	Set N,Z if necessary
-	cpu->X = cpu->mem[addr];
+	cpu->X = read(*cpu->bus, addr);
 
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
@@ -1308,7 +1308,7 @@ int do_LDY_imm(CPU *cpu)
 
 	// Cycle 1: fetch byte and store in Y, increment PC
 	// 	set N,Z if necessary
-	cpu->Y = fetch(cpu, cpu->PC);
+	cpu->Y = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	set_N(cpu, cpu->Y);
@@ -1331,16 +1331,16 @@ int do_LDY_abs(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch low byte of address, incement PC
-	word addr = fetch(cpu, cpu->PC);
+	word addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of address, increment PC
-	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
 	cpu->PC++;
 
 	// Cycle 3:  store byte in Y
 	// 	Set N,Z if necessary
-	cpu->Y = cpu->mem[addr];
+	cpu->Y = read(*cpu->bus, addr);
 
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
@@ -1363,12 +1363,12 @@ int do_LDY_absX(CPU *cpu)
 
 	// Cycle 1: fetch low byte of base address, incement PC
 	// 	use two bytes for bal so we can catch the carry
-	word bal = fetch(cpu, cpu->PC);
+	word bal = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of base address, add X to low byte
 	// 	increment PC
-	byte bah = fetch(cpu, cpu->PC);
+	byte bah = read(*cpu->bus, cpu->PC);
 	bal = bal + cpu->X;
 	cpu->PC++;
 
@@ -1376,7 +1376,7 @@ int do_LDY_absX(CPU *cpu)
 	if (bal < 256)
 	{
 		word addr = (bah << 8) + bal;
-		cpu->Y = cpu->mem[addr];
+		cpu->Y = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and do load on next cycle
 	{
@@ -1386,7 +1386,7 @@ int do_LDY_absX(CPU *cpu)
 
 		// Cycle 4:  store byte in Y
 		word addr = (bah << 8) + bal;
-		cpu->Y = cpu->mem[addr]; 
+		cpu->Y = read(*cpu->bus, addr);
 	}
 
 	// Set N,Z if necessary
@@ -1410,12 +1410,12 @@ int do_LDY_zpg(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	word addr = fetch(cpu, cpu->PC);
+	word addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  store byte in Y
 	// 	Set N,Z if necessary
-	cpu->Y = cpu->mem[addr];
+	cpu->Y = read(*cpu->bus, addr);
 
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
@@ -1437,7 +1437,7 @@ int do_LDY_zpgX(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	byte addr = fetch(cpu, cpu->PC);
+	byte addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2: Add X to address
@@ -1445,7 +1445,7 @@ int do_LDY_zpgX(CPU *cpu)
 
 	// Cycle 3:  store byte in Y
 	// 	Set N,Z if necessary
-	cpu->Y = cpu->mem[addr];
+	cpu->Y = read(*cpu->bus, addr);
 
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
@@ -1486,14 +1486,14 @@ int do_SBC_zpg(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 1: fetch zpg address and increment PC
-	word addr = fetch(cpu, cpu->PC);
+	word addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2: fetch byte
 	// 	Do the subtraction and update C
 	// 	Set N,V,Z if necessary
 	// 	Store in A
-	byte M = fetch(cpu, addr);
+	byte M = read(*cpu->bus, addr);
 
 	int result = cpu->A + (~M&0xFF) + ((cpu->SR & C)?1:0);
 	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
@@ -1526,7 +1526,7 @@ int do_SBC_imm(CPU *cpu)
 	// 	Do the subtraction and update C
 	// 	Set N,V,Z if necessary
 	// 	Store in A
-	byte M = fetch(cpu, cpu->PC);
+	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	int result = cpu->A + (~M&0xFF) + ((cpu->SR & C)?1:0);
@@ -1575,17 +1575,17 @@ int do_STA_abs(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch low byte of address, incement PC
-	word addr = fetch(cpu, cpu->PC);
+	word addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of address, increment PC
-	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
 	cpu->PC++;
 
 	// Cycle 3:  store A at addr
-	cpu->mem[addr] = cpu->A;
+	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, cpu->mem[addr], ncycles);
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1603,12 +1603,12 @@ int do_STA_absX(CPU *cpu)
 	
 	// Cycle 1: fetch low byte of base address, incement PC
 	// 	use two bytes for bal so we can catch the carry
-	word bal = fetch(cpu, cpu->PC);
+	word bal = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of base address, add X to low byte
 	// 	increment PC
-	byte bah = fetch(cpu, cpu->PC);
+	byte bah = read(*cpu->bus, cpu->PC);
 	bal = bal + cpu->X;
 	cpu->PC++;
 
@@ -1621,9 +1621,9 @@ int do_STA_absX(CPU *cpu)
 
 	// Cycle 4:  store A at addr
 	word addr = (bah << 8) + bal;
-	cpu->mem[addr] = cpu->A;
+	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, cpu->mem[addr], ncycles);
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1641,12 +1641,12 @@ int do_STA_absY(CPU *cpu)
 	
 	// Cycle 1: fetch low byte of base address, incement PC
 	// 	use two bytes for bal so we can catch the carry
-	word bal = fetch(cpu, cpu->PC);
+	word bal = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of base address, add Y to low byte
 	// 	increment PC
-	byte bah = fetch(cpu, cpu->PC);
+	byte bah = read(*cpu->bus, cpu->PC);
 	bal = bal + cpu->Y;
 	cpu->PC++;
 
@@ -1659,9 +1659,9 @@ int do_STA_absY(CPU *cpu)
 
 	// Cycle 4:  store A at addr
 	word addr = (bah << 8) + bal;
-	cpu->mem[addr] = cpu->A;
+	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, cpu->mem[addr], ncycles);
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1678,13 +1678,13 @@ int do_STA_zpg(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	byte addr = fetch(cpu, cpu->PC);
+	byte addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  store A at addr
-	cpu->mem[addr] = cpu->A;
+	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, cpu->mem[addr], ncycles);
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1701,16 +1701,16 @@ int do_STA_zpgX(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	byte addr = fetch(cpu, cpu->PC);
+	byte addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2: Add X to address
 	addr = addr + cpu->X;
 
 	// Cycle 3:  store A at addr
-	cpu->mem[addr] = cpu->A;
+	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, cpu->mem[addr], ncycles);
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1727,23 +1727,23 @@ int do_STA_Xind(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	byte zad = fetch(cpu, cpu->PC);
+	byte zad = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2: Add X to zpg address
 	zad = zad + cpu->X;
 
 	// Cycle 3: Fetch low byte of address, increment zpg address
-	byte adl = fetch(cpu, zad);
+	byte adl = read(*cpu->bus, zad);
 	zad = zad + 1;
 
 	// Cycle 4: Fetch high byte of address
-	byte adh = fetch(cpu, zad);
+	byte adh = read(*cpu->bus, zad);
 
 	// Cycle 5:  store A at addr
-	cpu->mem[(adh << 8) + adl] = cpu->A;
+	write(*cpu->bus, (adh << 8) + adl, cpu->A);
 
-	log_op_end(cpu, cpu->mem[(adh << 8) + adl], ncycles);
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1760,15 +1760,15 @@ int do_STA_indY(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	byte zad = fetch(cpu, cpu->PC);
+	byte zad = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2: fetch low byte of base address
-	word bal = fetch(cpu, zad);
+	word bal = read(*cpu->bus, zad);
 
 	// Cycle 3: fetch high byte of base address, add Y to low byte
 	zad = zad + 1;
-	byte bah = fetch(cpu, zad);
+	byte bah = read(*cpu->bus, zad);
 	bal = bal + cpu->Y;
 
 	// Cycle 4: add carry to high byte of address if necessary
@@ -1780,9 +1780,9 @@ int do_STA_indY(CPU *cpu)
 
 	// Cycle 5:  store A at addr
 	word addr = (bah << 8) + bal;
-	cpu->mem[addr] = cpu->A;
+	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, cpu->mem[addr], ncycles);
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1799,17 +1799,17 @@ int do_STX_abs(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch low byte of address, incement PC
-	word addr = fetch(cpu, cpu->PC);
+	word addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of address, increment PC
-	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
 	cpu->PC++;
 
 	// Cycle 3:  store X at addr
-	cpu->mem[addr] = cpu->X;
+	write(*cpu->bus, addr, cpu->X);
 
-	log_op_end(cpu, cpu->mem[addr], ncycles);
+	log_op_end(cpu, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -1826,13 +1826,13 @@ int do_STX_zpg(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	word addr = fetch(cpu, cpu->PC);
+	word addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  store X at addr
-	cpu->mem[addr] = cpu->X;
+	write(*cpu->bus, addr, cpu->X);
 
-	log_op_end(cpu, cpu->mem[addr], ncycles);
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1849,16 +1849,16 @@ int do_STX_zpgY(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	byte addr = fetch(cpu, cpu->PC);
+	byte addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2: Add Y to address
 	addr = addr + cpu->Y;
 
 	// Cycle 3:  store X at addr
-	cpu->mem[addr] = cpu->X;
+	write(*cpu->bus, addr, cpu->X);
 
-	log_op_end(cpu, cpu->mem[addr], ncycles);
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1875,17 +1875,17 @@ int do_STY_abs(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch low byte of address, incement PC
-	word addr = fetch(cpu, cpu->PC);
+	word addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  fetch high byte of address, increment PC
-	addr = addr + (fetch(cpu, cpu->PC) << 8);
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
 	cpu->PC++;
 
 	// Cycle 3:  store Y at addr
-	cpu->mem[addr] = cpu->Y;
+	write(*cpu->bus, addr, cpu->Y);
 
-	log_op_end(cpu, cpu->mem[addr], ncycles);
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1902,13 +1902,13 @@ int do_STY_zpg(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	word addr = fetch(cpu, cpu->PC);
+	word addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2:  store Y at addr
-	cpu->mem[addr] = cpu->Y;
+	write(*cpu->bus, addr, cpu->Y);
 
-	log_op_end(cpu, cpu->mem[addr], ncycles);
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1925,16 +1925,16 @@ int do_STY_zpgX(CPU *cpu)
 	cpu->PC++;
 	
 	// Cycle 1: fetch zpg address, incement PC
-	byte addr = fetch(cpu, cpu->PC);
+	byte addr = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
 	// Cycle 2: Add X to address
 	addr = addr + cpu->X;
 
 	// Cycle 3:  store Y at addr
-	cpu->mem[addr] = cpu->Y;
+	write(*cpu->bus, addr, cpu->Y);
 
-	log_op_end(cpu, cpu->mem[addr], ncycles);
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return ncycles;
 }
