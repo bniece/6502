@@ -40,6 +40,5 @@ void add_block(memory_block **blocks, word begin_addr, word end_addr);
 // I/O functions
 int import_mem(char *filename, membus *bus, word addr);
 void print_mem_page(membus *mem, word addr, int mark);
-void print_blocks(memory_block *blocks);
 
 #endif

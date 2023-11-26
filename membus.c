@@ -11,27 +11,41 @@
 #include "membus.h"
 
 byte read(membus bus, word addr)
+// If addr is in a write only block, return 0.
+// 	An actual processor probably returns something random that
+// 	that was previously on the bus, but we don't have a record of that.
 {
+	memory_block *list;
+	list = bus.wo_blocks;
+
+	while (list != NULL)
+	{
+		if ((addr >= list->begin) && (addr <= list->end))
+		{
+			return 0;
+		}
+		list = list->next;
+	}
+
 	return bus.mem[addr];
 }
 
 void write(membus bus, word addr, byte data)
-{
-	bus.mem[addr] = data;
-}
-
-void print_blocks(memory_block *blocks)
+// If addr is in a read only block, return with out writing
 {
 	memory_block *list;
-	list = blocks;
+	list = bus.ro_blocks;
 
 	while (list != NULL)
 	{
-		printf("Begin: %x\tEnd: %x\tNext: %p\n", list->begin,
-				list->end, list->next);
+		if ((addr >= list->begin) && (addr <= list->end))
+		{
+			return;
+		}
 		list = list->next;
 	}
 
+	bus.mem[addr] = data;
 }
 
 void initialize_bus(membus *bus)
