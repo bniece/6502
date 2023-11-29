@@ -1,15 +1,11 @@
-;test_CLV_impl
+;test_BRK_impl
 ;Expected outcome:
 ;	A = 0x2A
-LDA #$7F
-CLC
-ADC #$01
-CLV
+LDA #$2A
 
-BVC clear
 BRK			; This won't work if BRK is correctly implemented
 
 clear:
-LDA #$2A
+LDA #$00
 
 BRK

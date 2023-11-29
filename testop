@@ -4,7 +4,7 @@ testfile=asmcode/optests/test_$1.asm
 
 
 rm code.bin
-xa -o code.bin $testfile
+xa -M -o code.bin $testfile
 
 ./em6502
 
