@@ -573,6 +573,25 @@ int do_CLC_impl(CPU *cpu)
 	return ncycles;
 }
 
+int do_CLD_impl(CPU *cpu)
+// Clear Decimal flag
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "CLC   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Clear D
+	cpu->SR &= ~D;
+
+	log_op_end(cpu, cpu->SR, ncycles);
+
+	return ncycles;
+}
+
 int do_CLV_impl(CPU *cpu)
 // Clear Overflow flag
 {
@@ -2031,6 +2050,147 @@ int do_TYA_impl(CPU *cpu)
 	return ncycles;
 }
 
+int do_ADC_imm_BCD(CPU *cpu)
+// Add with Carry, immediate addressing - BCD mode
+// 	A, C = A + M + C
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "ADC # ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	byte M = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	//		Store values for flag checks at end
+	byte old_A = cpu->A;
+	byte old_C = (cpu->SR & C)?1:0;
+
+	// 	Do the addition and update C
+	int rl, rh, tc; 	// result low byte, high byte, temp carry flag
+	rl = (cpu->A & 0x0F) + (M & 0x0F) + ((cpu->SR & C)?1:0);
+	if (rl > 9)
+	{
+		rl = rl - 10;
+		tc = 1;
+	}
+	else
+	{
+		tc = 0;
+	}
+	rh = (cpu->A>>4) + (M>>4) + tc;
+	if (rh > 9)
+	{
+		rh = rh - 10;
+		tc = 1;
+	}
+	else
+	{
+		tc = 0;
+	}
+
+	int result = rl + (rh<<4);
+
+	if (tc == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+
+	// 	Store in A
+	cpu->A = result;
+
+	// 	Redo the math in true binary and set N,V,Z if necessary
+	// 		This logic may not be right.  Check.
+	result = old_A + M + old_C;
+	set_N(cpu, result);
+	set_V(cpu, cpu->A, M, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_ADC_zpg_BCD(CPU *cpu)
+// Add with Carry, zero page addressing - BCD mode
+// 	A, C = A + M + C
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "ADC # ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	//		Store values for flag checks at end
+	byte old_A = cpu->A;
+	byte old_C = (cpu->SR & C)?1:0;
+
+	// 	Do the addition and update C
+	int rl, rh, tc; 	// result low byte, high byte, temp carry flag
+	rl = (cpu->A & 0x0F) + (M & 0x0F) + ((cpu->SR & C)?1:0);
+	if (rl > 9)
+	{
+		rl = rl - 10;
+		tc = 1;
+	}
+	else
+	{
+		tc = 0;
+	}
+	rh = (cpu->A>>4) + (M>>4) + tc;
+	if (rh > 9)
+	{
+		rh = rh - 10;
+		tc = 1;
+	}
+	else
+	{
+		tc = 0;
+	}
+
+	int result = rl + (rh<<4);
+
+	if (tc == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+
+	// 	Store in A
+	cpu->A = result;
+
+	// 	Redo the math in true binary and set N,V,Z if necessary
+	// 		This logic may not be right.  Check.
+	result = old_A + M + old_C;
+	set_N(cpu, result);
+	set_V(cpu, cpu->A, M, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
 int (*execute[])(CPU *cpu) =
 {
 do_BRK_impl, 	// 0x00
@@ -2249,7 +2409,7 @@ do_NOP_impl, 	// 0xD4
 do_NOP_impl, 	// 0xD5
 do_NOP_impl, 	// 0xD6
 do_NOP_impl, 	// 0xD7
-do_NOP_impl, 	// 0xD8
+do_CLD_impl, 	// 0xD8
 do_NOP_impl, 	// 0xD9
 do_NOP_impl, 	// 0xDA
 do_NOP_impl, 	// 0xDB
@@ -2281,7 +2441,7 @@ do_NOP_impl, 	// 0xF4
 do_NOP_impl, 	// 0xF5
 do_NOP_impl, 	// 0xF6
 do_NOP_impl, 	// 0xF7
-do_NOP_impl, 	// 0xF8
+do_SED_impl, 	// 0xF8
 do_NOP_impl, 	// 0xF9
 do_NOP_impl, 	// 0xFA
 do_NOP_impl, 	// 0xFB
@@ -2290,3 +2450,26 @@ do_NOP_impl, 	// 0xFD
 do_NOP_impl, 	// 0xFE
 do_NOP_impl  	// 0xFF
 };
+
+int do_SED_impl(CPU *cpu)
+// Set Decimal flag
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "SED   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Set D
+	cpu->SR |= D;
+
+	// Swap arithmetic handlers
+	execute[0x65] = do_ADC_zpg_BCD;
+	execute[0x69] = do_ADC_imm_BCD;
+
+	log_op_end(cpu, cpu->SR, ncycles);
+
+	return ncycles;
+}

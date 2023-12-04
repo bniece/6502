@@ -1,29 +1,39 @@
-# MSVC makefile for compilation tests
-CC = cl
-LD = link
+# GCC Makefile for compilation tests
+CC = gcc
 
-COPTS = /Zi /MDd /W4
-LOPTS = /DEBUG
+PREFIX := ../$(shell awk -F'=' /^ID=/'{print $$2}' /etc/os-release | \
+	 sed -e 's/"//g')
 
-INCDIR = ..\msvc\include
-LIBDIR = ..\msvc\lib
+ifeq ($(PREFIX), ../msys2)
+ALLTARGETS = em6502
+else
+ALLTARGETS = em6502
+endif
 
-em6502: em6502.obj cpu.obj instructions.obj
-	$(LD) $(LOPTS) /OUT:em6502.exe em6502.obj cpu.obj instructions.obj /LIBPATH:$(LIBDIR) getopt.lib
+OPTS = -g -Wall
 
-em6502.obj: em6502.c em6502.h version.h
-	$(CC) $(COPTS) /I$(INCDIR) /c em6502.c
+em6502: em6502.o cpu.o instructions.o membus.o
+	$(CC) $(OPTS) -o em6502 em6502.o cpu.o instructions.o membus.o
 
-cpu.obj: cpu.c cpu.h
-	$(CC) $(COPTS) /c cpu.c
+em6502.o: em6502.c em6502.h version.h
+	$(CC) $(OPTS) -c em6502.c
 
-instructions.obj: instructions.c instructions.h
-	$(CC) $(COPTS) /c instructions.c
+cpu.o: cpu.c cpu.h
+	$(CC) $(OPTS) -c cpu.c
 
-all: em6502
+instructions.o: instructions.c instructions.h
+	$(CC) $(OPTS) -c instructions.c
 
-install: em6502
-	copy em6502.exe ..\msvc\bin
+membus.o: membus.c membus.h
+	$(CC) $(OPTS) -c membus.c
+
+all: $(ALLTARGETS)
+
+install: all
+	cp em6502 $(PREFIX)/bin
+ifeq ($(PREFIX), ../msys2)
+
+endif
 
 clean: 
-	del *.obj *.pdb *.ilk *.exe *.res *.manifest
+	-rm -f *.o *.exe *.gch $(ALLTARGETS)

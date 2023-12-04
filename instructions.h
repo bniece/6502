@@ -70,11 +70,17 @@ int do_INY_impl(CPU *cpu);	// 0xC8
 int do_CMP_imm(CPU *cpu);	// 0xC9
 int do_DEX_impl(CPU *cpu);	// 0xCA
 int do_BNE_rel(CPU *cpu);	// 0xD0
+int do_CLD_impl(CPU *cpu);	// 0xD8
 int do_CPX_imm(CPU *cpu);	// 0xE0
 int do_SBC_zpg(CPU *cpu);	// 0xE5
 int do_INX_impl(CPU *cpu);	// 0xE8
 int do_SBC_imm(CPU *cpu);	// 0xE9
 int do_NOP_impl(CPU *cpu);	// 0xEA
 int do_BEQ_rel(CPU *cpu);	// 0xF0
+int do_SED_impl(CPU *cpu);	// 0xF8
+
+// Alternate handlers for BCD mode
+int do_ADC_zpg_BCD(CPU *cpu);	// 0x65
+int do_ADC_imm_BCD(CPU *cpu);	// 0x69
 
 #endif
