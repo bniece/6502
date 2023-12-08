@@ -9,6 +9,7 @@ square root
 sort -- bubble, quick
 remove from list
 Simple TTY I/O -- interrupt on keypress, write to buffer for output
+Simulated 7-segment display
 
 Code placement, data placement, data export
 

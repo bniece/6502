@@ -573,24 +573,7 @@ int do_CLC_impl(CPU *cpu)
 	return ncycles;
 }
 
-int do_CLD_impl(CPU *cpu)
-// Clear Decimal flag
-{
-	int nbytes = 1;
-	int ncycles = 2;
-
-	log_op_start(cpu, "CLC   ", nbytes);
-
-	// Cycle 0: instruction fetched, increment PC
-	cpu->PC++;
-
-	// Cycle 1: Clear D
-	cpu->SR &= ~D;
-
-	log_op_end(cpu, cpu->SR, ncycles);
-
-	return ncycles;
-}
+// CLD is below the execute array assignments
 
 int do_CLV_impl(CPU *cpu)
 // Clear Overflow flag
@@ -1582,6 +1565,8 @@ int do_SEC_impl(CPU *cpu)
 	return ncycles;
 }
 
+// SED is below the execute array assignment
+
 int do_STA_abs(CPU *cpu)
 // Store Accumulator in memory with absolute addressing
 {
@@ -2095,6 +2080,7 @@ int do_ADC_imm_BCD(CPU *cpu)
 
 	int result = rl + (rh<<4);
 
+	// Set the actual carry bit based on the placeholder
 	if (tc == 0)
 	{
 		cpu->SR &= ~C;
@@ -2167,6 +2153,7 @@ int do_ADC_zpg_BCD(CPU *cpu)
 
 	int result = rl + (rh<<4);
 
+	// Set the actual carry bit based on the placeholder
 	if (tc == 0)
 	{
 		cpu->SR &= ~C;
@@ -2184,6 +2171,79 @@ int do_ADC_zpg_BCD(CPU *cpu)
 	result = old_A + M + old_C;
 	set_N(cpu, result);
 	set_V(cpu, cpu->A, M, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_SBC_imm_BCD(CPU *cpu)
+// Subtract with Carry, immediate addressing
+// 	A, C = A + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "SBC # ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	byte M = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// 	Store old values for flag checks at end
+	byte old_A = cpu->A;
+	byte old_C = (cpu->SR & C)?1:0;
+
+	// 	Do the subtraction and update C
+	int rl, rh, tc; 	// result low byte, high byte, temp carry flag
+	rl = (cpu->A & 0x0F) + (~M&0x0F) + ((cpu->SR & C)?1:0);
+	//	(Trim ~M to 4 bits so the carry bit doesn't get lost 28 bits to the left)
+	if ((rl & 0x10) == 0)	// Check to see if the carry bit got "borrowed"
+	{
+		rl = rl - 6;
+		tc = 0;
+	}
+	else
+	{
+		rl = rl & 0x0F;
+		tc = 1;
+	}
+	rh = (cpu->A>>4) + ((~M>>4)&0x0F) + tc;
+	if ((rh & 0x10) == 0)	// Check to see if the carry bit got "borrowed"
+	{
+		rh = rh - 6;
+		tc = 0;
+	}
+	else
+	{
+		rh = rh & 0x0F;
+		tc = 1;
+	}
+
+	int result = rl + (rh<<4);
+
+	// Set the actual carry bit based on the placeholder
+	if (tc == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+
+	// 	Store in A
+	cpu->A = result;
+
+	// 	Redo the math in true binary and set N,V,Z if necessary
+	// 		This logic may not be right.  Check.
+	result = old_A + M + old_C;
+	set_N(cpu, result);
+	set_V(cpu, cpu->A, ~M, result);
 	set_Z(cpu, result);
 
 	log_op_end(cpu, cpu->A, ncycles);
@@ -2451,6 +2511,28 @@ do_NOP_impl, 	// 0xFE
 do_NOP_impl  	// 0xFF
 };
 
+int do_CLD_impl(CPU *cpu)
+// Clear Decimal flag
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "CLC   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Clear D
+	cpu->SR &= ~D;
+
+	// Swap arithmetic handlers
+	execute[0xE9] = do_SBC_imm;
+
+	log_op_end(cpu, cpu->SR, ncycles);
+
+	return ncycles;
+}
+
 int do_SED_impl(CPU *cpu)
 // Set Decimal flag
 {
@@ -2468,6 +2550,7 @@ int do_SED_impl(CPU *cpu)
 	// Swap arithmetic handlers
 	execute[0x65] = do_ADC_zpg_BCD;
 	execute[0x69] = do_ADC_imm_BCD;
+	execute[0xE9] = do_SBC_imm_BCD;
 
 	log_op_end(cpu, cpu->SR, ncycles);
 

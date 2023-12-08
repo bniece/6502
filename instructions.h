@@ -82,5 +82,6 @@ int do_SED_impl(CPU *cpu);	// 0xF8
 // Alternate handlers for BCD mode
 int do_ADC_zpg_BCD(CPU *cpu);	// 0x65
 int do_ADC_imm_BCD(CPU *cpu);	// 0x69
+int do_SBC_imm_BCD(CPU *cpu);	// 0xE9
 
 #endif
