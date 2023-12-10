@@ -1,4 +1,4 @@
-// 6502insructions.h
+// insructions.h
 //
 // Definitions and function prototypes for 6502 emulator program
 // 	Instruction structure and functions
@@ -25,6 +25,7 @@ int do_BVC_rel(CPU *cpu);	// 0x50
 int do_ADC_zpg(CPU *cpu);	// 0x65
 int do_ADC_imm(CPU *cpu);	// 0x69
 int do_JMP_ind(CPU *cpu);	// 0x6C
+int do_ADC_abs(CPU *cpu);	// 0x6D
 int do_BVS_rel(CPU *cpu);	// 0x70
 int do_STA_Xind(CPU *cpu);	// 0x81
 int do_STY_zpg(CPU *cpu);	// 0x84
@@ -76,12 +77,16 @@ int do_SBC_zpg(CPU *cpu);	// 0xE5
 int do_INX_impl(CPU *cpu);	// 0xE8
 int do_SBC_imm(CPU *cpu);	// 0xE9
 int do_NOP_impl(CPU *cpu);	// 0xEA
+int do_SBC_abs(CPU *cpu);	// 0xE5
 int do_BEQ_rel(CPU *cpu);	// 0xF0
 int do_SED_impl(CPU *cpu);	// 0xF8
 
 // Alternate handlers for BCD mode
-int do_ADC_zpg_BCD(CPU *cpu);	// 0x65
 int do_ADC_imm_BCD(CPU *cpu);	// 0x69
+int do_ADC_abs_BCD(CPU *cpu);	// 0x6D
+int do_ADC_zpg_BCD(CPU *cpu);	// 0x65
 int do_SBC_imm_BCD(CPU *cpu);	// 0xE9
+int do_SBC_abs_BCD(CPU *cpu);	// 0xED
+int do_SBC_zpg_BCD(CPU *cpu);	// 0xE5
 
 #endif
