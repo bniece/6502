@@ -1,0 +1,49 @@
+;test_ADC_absX_BCD
+;Expected outcome:
+;	A C
+;	0200: 43 00
+;	0210: 00 01
+;	0220: 01 01
+SED
+
+LDA #$01
+STA $02F0
+LDA #$58
+STA $02F1
+LDA #$59
+STA $02F2
+
+LDX #$00
+
+LDA #$42
+CLC
+ADC $02F0,X
+STA $0200
+BCC noC1	; Save C flag
+LDA #$01
+STA $0201
+noC1:
+
+INX
+
+LDA #$42
+CLC
+ADC $02F0,X
+STA $0210
+BCC noC2	; Save C flag
+LDA #$01
+STA $0211
+noC2:
+
+INX
+
+LDA #$42
+CLC
+ADC $02F0,X
+STA $0220
+BCC noC3	; Save C flag
+LDA #$01
+STA $0221
+noC3:
+
+BRK
