@@ -267,6 +267,45 @@ int do_ADC_zpg(CPU *cpu)
 	return ncycles;
 }
 
+int do_ADC_zpgX(CPU *cpu)
+// Add with Carry, X indexed zero page addressing
+// 	A, C = A + M + C
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "ADC zpg,X", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3: fetch byte
+	// 	Do the addition and update C
+	// 	Set N,V,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A + M + ((cpu->SR & C)?1:0);
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_V(cpu, cpu->A, M, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
 int do_BCC_rel(CPU *cpu)
 // Branch on carry clear
 {
@@ -1863,6 +1902,46 @@ int do_SBC_zpg(CPU *cpu)
 	return ncycles;
 }
 
+int do_SBC_zpgX(CPU *cpu)
+// Subtract with Carry, X indexed zero page addressing
+// 	A, C = A + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "SBC zpg,X", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3: fetch byte
+	// 	Do the subtraction and update C
+	// 	Set N,V,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A + (~M&0xFF) + ((cpu->SR & C)?1:0);
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_V(cpu, cpu->A, ~M, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
 int do_SEC_impl(CPU *cpu)
 // Set Carry flag
 {
@@ -2762,6 +2841,82 @@ int do_ADC_zpg_BCD(CPU *cpu)
 	return ncycles;
 }
 
+int do_ADC_zpgX_BCD(CPU *cpu)
+// Add with Carry, X indexed zero page addressing - BCD mode
+// 	A, C = A + M + C
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "ADC zpg,X", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3:  fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	//		Store values for flag checks at end
+	byte old_A = cpu->A;
+	byte old_C = (cpu->SR & C)?1:0;
+
+	// 	Do the addition and update C
+	int rl, rh, tc; 	// result low byte, high byte, temp carry flag
+	rl = (cpu->A & 0x0F) + (M & 0x0F) + ((cpu->SR & C)?1:0);
+	if (rl > 9)
+	{
+		rl = rl - 10;
+		tc = 1;
+	}
+	else
+	{
+		tc = 0;
+	}
+	rh = (cpu->A>>4) + (M>>4) + tc;
+	if (rh > 9)
+	{
+		rh = rh - 10;
+		tc = 1;
+	}
+	else
+	{
+		tc = 0;
+	}
+
+	int result = rl + (rh<<4);
+
+	// Set the actual carry bit based on the placeholder
+	if (tc == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+
+	// 	Store in A
+	cpu->A = result;
+
+	// 	Redo the math in true binary and set N,V,Z if necessary
+	// 		This logic may not be right.  Check.
+	result = old_A + M + old_C;
+	set_N(cpu, result);
+	set_V(cpu, cpu->A, M, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
 int do_SBC_imm_BCD(CPU *cpu)
 // Subtract with Carry, immediate addressing - BCD mode
 // 	A, C = A + ~M + C
@@ -3187,6 +3342,85 @@ int do_SBC_zpg_BCD(CPU *cpu)
 	return ncycles;
 }
 
+int do_SBC_zpgX_BCD(CPU *cpu)
+// Subtract with Carry, X indexed zero page addressing - BCD mode
+// 	A, C = A + ~M + C
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "SBC abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// 	Store old values for flag checks at end
+	byte old_A = cpu->A;
+	byte old_C = (cpu->SR & C)?1:0;
+
+	// 	Do the subtraction and update C
+	int rl, rh, tc; 	// result low byte, high byte, temp carry flag
+	rl = (cpu->A & 0x0F) + (~M&0x0F) + ((cpu->SR & C)?1:0);
+	//	(Trim ~M to 4 bits so the carry bit doesn't get lost 28 bits to the left)
+	if ((rl & 0x10) == 0)	// Check to see if the carry bit got "borrowed"
+	{
+		rl = rl - 6;
+		tc = 0;
+	}
+	else
+	{
+		rl = rl & 0x0F;
+		tc = 1;
+	}
+	rh = (cpu->A>>4) + ((~M>>4)&0x0F) + tc;
+	if ((rh & 0x10) == 0)	// Check to see if the carry bit got "borrowed"
+	{
+		rh = rh - 6;
+		tc = 0;
+	}
+	else
+	{
+		rh = rh & 0x0F;
+		tc = 1;
+	}
+
+	int result = rl + (rh<<4);
+
+	// Set the actual carry bit based on the placeholder
+	if (tc == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+
+	// 	Store in A
+	cpu->A = result;
+
+	// 	Redo the math in true binary and set N,V,Z if necessary
+	// 		This logic may not be right.  Check.
+	result = old_A + M + old_C;
+	set_N(cpu, result);
+	set_V(cpu, cpu->A, ~M, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
 int (*execute[])(CPU *cpu) =
 {
 do_BRK_impl, 	// 0x00
@@ -3306,7 +3540,7 @@ do_NOP_impl, 	// 0x71
 do_NOP_impl, 	// 0x72
 do_NOP_impl, 	// 0x73
 do_NOP_impl, 	// 0x74
-do_NOP_impl, 	// 0x75
+do_ADC_zpgX, 	// 0x75
 do_NOP_impl, 	// 0x76
 do_NOP_impl, 	// 0x77
 do_NOP_impl, 	// 0x78
@@ -3434,7 +3668,7 @@ do_NOP_impl, 	// 0xF1
 do_NOP_impl, 	// 0xF2
 do_NOP_impl, 	// 0xF3
 do_NOP_impl, 	// 0xF4
-do_NOP_impl, 	// 0xF5
+do_SBC_zpgX, 	// 0xF5
 do_NOP_impl, 	// 0xF6
 do_NOP_impl, 	// 0xF7
 do_SED_impl, 	// 0xF8
@@ -3467,11 +3701,13 @@ int do_CLD_impl(CPU *cpu)
 	execute[0x7D] = do_ADC_absX;
 	execute[0x79] = do_ADC_absY;
 	execute[0x65] = do_ADC_zpg;
+	execute[0x75] = do_ADC_zpgX;
 	execute[0xE9] = do_SBC_imm;
 	execute[0xED] = do_SBC_abs;
 	execute[0xFD] = do_SBC_absX;
 	execute[0xF9] = do_SBC_absY;
 	execute[0xE5] = do_SBC_zpg;
+	execute[0xF5] = do_SBC_zpgX;
 
 	log_op_end(cpu, cpu->SR, ncycles);
 
@@ -3498,11 +3734,13 @@ int do_SED_impl(CPU *cpu)
 	execute[0x7D] = do_ADC_absX_BCD;
 	execute[0x79] = do_ADC_absY_BCD;
 	execute[0x65] = do_ADC_zpg_BCD;
+	execute[0x75] = do_ADC_zpgX_BCD;
 	execute[0xE9] = do_SBC_imm_BCD;
 	execute[0xED] = do_SBC_abs_BCD;
 	execute[0xFD] = do_SBC_absX_BCD;
 	execute[0xF9] = do_SBC_absY_BCD;
 	execute[0xE5] = do_SBC_zpg_BCD;
+	execute[0xF5] = do_SBC_zpgX_BCD;
 
 	log_op_end(cpu, cpu->SR, ncycles);
 

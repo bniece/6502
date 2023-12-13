@@ -27,6 +27,7 @@ int do_ADC_imm(CPU *cpu);	// 0x69
 int do_JMP_ind(CPU *cpu);	// 0x6C
 int do_ADC_abs(CPU *cpu);	// 0x6D
 int do_BVS_rel(CPU *cpu);	// 0x70
+int do_ADC_zpgX(CPU *cpu);	// 0x75
 int do_ADC_absY(CPU *cpu);	// 0x79
 int do_ADC_absX(CPU *cpu);	// 0x7D
 int do_STA_Xind(CPU *cpu);	// 0x81
@@ -81,6 +82,7 @@ int do_SBC_imm(CPU *cpu);	// 0xE9
 int do_NOP_impl(CPU *cpu);	// 0xEA
 int do_SBC_abs(CPU *cpu);	// 0xE5
 int do_BEQ_rel(CPU *cpu);	// 0xF0
+int do_SBC_zpgX(CPU *cpu);	// 0xF5
 int do_SED_impl(CPU *cpu);	// 0xF8
 int do_SBC_absY(CPU *cpu);	// 0xF9
 int do_SBC_absX(CPU *cpu);	// 0xFD
@@ -91,10 +93,12 @@ int do_ADC_abs_BCD(CPU *cpu);		// 0x6D
 int do_ADC_absX_BCD(CPU *cpu);	// 0x7D
 int do_ADC_absY_BCD(CPU *cpu);	// 0x79
 int do_ADC_zpg_BCD(CPU *cpu);		// 0x65
+int do_ADC_zpgX_BCD(CPU *cpu);	// 0x75
 int do_SBC_imm_BCD(CPU *cpu);		// 0xE9
 int do_SBC_abs_BCD(CPU *cpu);		// 0xED
 int do_SBC_absX_BCD(CPU *cpu);	// 0xFD
 int do_SBC_absY_BCD(CPU *cpu);	// 0xF9
 int do_SBC_zpg_BCD(CPU *cpu);		// 0xE5
+int do_SBC_zpgX_BCD(CPU *cpu);	// 0xF5
 
 #endif
