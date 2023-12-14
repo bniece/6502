@@ -52,7 +52,7 @@ c, code-size: number of pages in code file (default = 128/0x80)
 
 
 OP Codes:
-ADC
+**ADC
 AND
 ASL
 **BCC
@@ -66,7 +66,7 @@ BIT
 **BVC
 **BVS
 **CLC
-CLD
+**CLD
 CLI
 **CLV
 CMP
@@ -95,9 +95,9 @@ ROL
 ROR
 RTI
 RTS
-SBC
+**SBC
 **SEC
-SED
+**SED
 SEI
 **STA
 **STX
