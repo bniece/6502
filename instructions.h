@@ -21,9 +21,11 @@ int do_CLC_impl(CPU *cpu);	// 0x18
 int do_BMI_rel(CPU *cpu);	// 0x30
 int do_SEC_impl(CPU *cpu);	// 0x38
 int do_JMP_abs(CPU *cpu);	// 0x4C
+int do_PHA_impl(CPU *cpu);	// 0x48
 int do_BVC_rel(CPU *cpu);	// 0x50
 int do_ADC_Xind(CPU *cpu);	// 0x61
 int do_ADC_zpg(CPU *cpu);	// 0x65
+int do_PLA_impl(CPU *cpu);	// 0x68
 int do_ADC_imm(CPU *cpu);	// 0x69
 int do_JMP_ind(CPU *cpu);	// 0x6C
 int do_ADC_abs(CPU *cpu);	// 0x6D
@@ -48,6 +50,7 @@ int do_STA_zpgX(CPU *cpu);	// 0x95
 int do_STX_zpgY(CPU *cpu);	// 0x96
 int do_TYA_impl(CPU *cpu);	// 0x98
 int do_STA_absY(CPU *cpu);	// 0x99
+int do_TXS_impl(CPU *cpu);	// 0x9A
 int do_STA_absX(CPU *cpu);	// 0x9D
 int do_LDY_imm(CPU *cpu);	// 0xA0
 int do_LDA_Xind(CPU *cpu);	// 0xA1

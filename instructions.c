@@ -1145,6 +1145,54 @@ int do_JMP_ind(CPU *cpu)
 	return ncycles;
 }
 
+int do_PHA_impl(CPU *cpu)
+// Push accumulator on stack
+{
+	int nbytes = 1;
+	int ncycles = 3;
+
+	log_op_start(cpu, "PHA   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: copy A to stack
+	write(*cpu->bus, 0x0100 + cpu->SP, cpu->A);
+
+	// Cycle 2: Decrement stack pointer
+	cpu->SP--;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_PLA_impl(CPU *cpu)
+// Pull accumulator from stack
+{
+	int nbytes = 1;
+	int ncycles = 4;
+
+	log_op_start(cpu, "PLA   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Increment stack pointer
+	cpu->SP++;
+
+	// Cycle 2: copy byte from stack to A
+	cpu->A = read(*cpu->bus, 0x0100 + cpu->SP);
+
+	// Cycle 3: set N,Z if necessary
+	set_N(cpu, cpu->A);
+	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
 int do_LDA_imm(CPU *cpu)
 // Load Accumulator with immediate addressing
 {
@@ -2575,6 +2623,25 @@ int do_TAX_impl(CPU *cpu)
 	return ncycles;
 }
 
+int do_TSX_impl(CPU *cpu)
+// Transfer Stack Pointer to X
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "TSX   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: copy byte from A to X
+	cpu->X = cpu->SP;
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return ncycles;
+}
+
 int do_TAY_impl(CPU *cpu)
 // Transfer Accumulator to Y
 {
@@ -2615,6 +2682,25 @@ int do_TXA_impl(CPU *cpu)
 
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_TXS_impl(CPU *cpu)
+// Transfer X to Stack Pointers
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "TXS   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: copy byte from X to SP
+	cpu->SP = cpu->X;
 
 	log_op_end(cpu, cpu->A, ncycles);
 
@@ -4072,7 +4158,7 @@ do_NOP_impl, 	// 0x44
 do_NOP_impl, 	// 0x45
 do_NOP_impl, 	// 0x46
 do_NOP_impl, 	// 0x47
-do_NOP_impl, 	// 0x48
+do_PHA_impl, 	// 0x48
 do_NOP_impl, 	// 0x49
 do_NOP_impl, 	// 0x4A
 do_NOP_impl, 	// 0x4B
@@ -4104,7 +4190,7 @@ do_NOP_impl, 	// 0x64
 do_ADC_zpg, 	// 0x65
 do_NOP_impl, 	// 0x66
 do_NOP_impl, 	// 0x67
-do_NOP_impl, 	// 0x68
+do_PLA_impl, 	// 0x68
 do_ADC_imm, 	// 0x69
 do_NOP_impl, 	// 0x6A
 do_NOP_impl, 	// 0x6B
@@ -4154,7 +4240,7 @@ do_STX_zpgY, 	// 0x96
 do_NOP_impl, 	// 0x97
 do_TYA_impl, 	// 0x98
 do_STA_absY, 	// 0x99
-do_NOP_impl, 	// 0x9A
+do_TXS_impl, 	// 0x9A
 do_NOP_impl, 	// 0x9B
 do_NOP_impl, 	// 0x9C
 do_STA_absX, 	// 0x9D
@@ -4186,7 +4272,7 @@ do_LDX_zpgY, 	// 0xB6
 do_NOP_impl, 	// 0xB7
 do_CLV_impl, 	// 0xB8
 do_LDA_absY, 	// 0xB9
-do_NOP_impl, 	// 0xBA
+do_TSX_impl, 	// 0xBA
 do_NOP_impl, 	// 0xBB
 do_LDY_absX, 	// 0xBC
 do_LDA_absX, 	// 0xBD
