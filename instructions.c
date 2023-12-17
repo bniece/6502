@@ -1167,6 +1167,28 @@ int do_PHA_impl(CPU *cpu)
 	return ncycles;
 }
 
+int do_PHP_impl(CPU *cpu)
+// Push processor status on stack
+{
+	int nbytes = 1;
+	int ncycles = 3;
+
+	log_op_start(cpu, "PHP   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: copy SR to stack
+	write(*cpu->bus, 0x0100 + cpu->SP, cpu->SR);
+
+	// Cycle 2: Decrement stack pointer
+	cpu->SP--;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
 int do_PLA_impl(CPU *cpu)
 // Pull accumulator from stack
 {
@@ -1187,6 +1209,30 @@ int do_PLA_impl(CPU *cpu)
 	// Cycle 3: set N,Z if necessary
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_PLP_impl(CPU *cpu)
+// Pull processor status from stack
+{
+	int nbytes = 1;
+	int ncycles = 4;
+
+	log_op_start(cpu, "PLP   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Increment stack pointer
+	cpu->SP++;
+
+	// Cycle 2: copy byte from stack to A
+	cpu->SR = read(*cpu->bus, 0x0100 + cpu->SP);
+
+	// Cycle 3: Not sure what happens here.  Flags should be set
 
 	log_op_end(cpu, cpu->A, ncycles);
 
@@ -4094,7 +4140,7 @@ do_NOP_impl, 	// 0x04
 do_NOP_impl, 	// 0x05
 do_NOP_impl, 	// 0x06
 do_NOP_impl, 	// 0x07
-do_NOP_impl, 	// 0x08
+do_PHP_impl, 	// 0x08
 do_NOP_impl, 	// 0x09
 do_NOP_impl, 	// 0x0A
 do_NOP_impl, 	// 0x0B
@@ -4126,7 +4172,7 @@ do_NOP_impl, 	// 0x24
 do_NOP_impl, 	// 0x25
 do_NOP_impl, 	// 0x26
 do_NOP_impl, 	// 0x27
-do_NOP_impl, 	// 0x28
+do_PLP_impl, 	// 0x28
 do_NOP_impl, 	// 0x29
 do_NOP_impl, 	// 0x2A
 do_NOP_impl, 	// 0x2B
