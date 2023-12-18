@@ -35,6 +35,7 @@ p, program-file: code file, default = code.bin
 i, input-file: data file, default = data.bin
 o, output-file: data output file, default = out.bin
 
+B, enable-break: BRK issues interrupt, NOP terminates
 C, code-pages: pages of code to print, default = 1
 D, data-pages: pages of data to print (at end of run), default = 1
 S, print-stack: print stack (1, default) or not (0)

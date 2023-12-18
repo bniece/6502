@@ -1145,6 +1145,41 @@ int do_JMP_ind(CPU *cpu)
 	return ncycles;
 }
 
+int do_JSR_abs(CPU *cpu)
+// Jump to subroutine with absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 6;
+
+	log_op_start(cpu, "JSR abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: push high byte of return address on stack, decrement SP
+	write(*cpu->bus, 0x100 + cpu->SP, cpu->PC >> 8);
+	cpu->SP--;
+
+	// Cycle 2: push low byte of return address on stack, decrement SP
+	write(*cpu->bus, 0x0100 + cpu->SP, (cpu->PC & 0xFF) + 1);
+	cpu->SP--;
+	
+	// Cycle 3: fetch low byte of address, incement PC
+	byte adl = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 4:  fetch high byte of address, increment PC
+	byte adh = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 5:  Set PC for jump
+	cpu->PC = adl + (adh << 8);
+
+	log_op_end(cpu, adl, ncycles);
+
+	return ncycles;
+}
+
 int do_PHA_impl(CPU *cpu)
 // Push accumulator on stack
 {
@@ -1867,6 +1902,37 @@ int do_NOP_impl(CPU *cpu)
 	// Cycle 1: Do nothing
 	
 	log_op_end(cpu, 0, ncycles);
+
+	return ncycles;
+}
+
+int do_RTS_impl(CPU *cpu)
+// Return from subroutine with addressing
+{
+	int nbytes = 1;
+	int ncycles = 6;
+
+	log_op_start(cpu, "RTS impl", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Increment stack pointer
+	cpu->SP++;
+
+	// Cycle 2: pull low byte of return address from stack
+	byte adl = read(*cpu->bus, 0x100 + cpu->SP);
+
+	// Cycle 3:  Increment stack pointer
+	cpu->SP++;
+
+	// Cycle 4: pull high byte of return address from stack
+	byte adh = read(*cpu->bus, 0x100 + cpu->SP);
+
+	// Cycle 5: Put return address into PC (add 1 for next instruction)
+	cpu->PC = adl + (adh << 8) + 1;
+
+	log_op_end(cpu, adl, ncycles);
 
 	return ncycles;
 }
@@ -4164,7 +4230,7 @@ do_NOP_impl, 	// 0x1C
 do_NOP_impl, 	// 0x1D
 do_NOP_impl, 	// 0x1E
 do_NOP_impl, 	// 0x1F
-do_NOP_impl, 	// 0x20
+do_JSR_abs, 	// 0x20
 do_NOP_impl, 	// 0x21
 do_NOP_impl, 	// 0x22
 do_NOP_impl, 	// 0x23
@@ -4228,7 +4294,7 @@ do_NOP_impl, 	// 0x5C
 do_NOP_impl, 	// 0x5D
 do_NOP_impl, 	// 0x5E
 do_NOP_impl, 	// 0x5F
-do_NOP_impl, 	// 0x60
+do_RTS_impl, 	// 0x60
 do_ADC_Xind, 	// 0x61
 do_NOP_impl, 	// 0x62
 do_NOP_impl, 	// 0x63
