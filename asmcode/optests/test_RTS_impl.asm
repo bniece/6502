@@ -1,4 +1,4 @@
-;test_JSR_abs
+;test_RTS_impl
 ;Expected outcome:
 ;	A = 0x2B
 * = $0600

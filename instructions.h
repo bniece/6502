@@ -23,6 +23,7 @@ int do_PLP_impl(CPU *cpu);	// 0x28
 int do_JSR_abs(CPU *cpu);	// 0x20
 int do_BMI_rel(CPU *cpu);	// 0x30
 int do_SEC_impl(CPU *cpu);	// 0x38
+int do_RTI_impl(CPU *cpu);	// 0x40
 int do_JMP_abs(CPU *cpu);	// 0x4C
 int do_PHA_impl(CPU *cpu);	// 0x48
 int do_BVC_rel(CPU *cpu);	// 0x50

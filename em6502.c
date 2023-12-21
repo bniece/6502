@@ -4,29 +4,57 @@
 //
 // Brian K. Niece
 
+#include <getopt.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "em6502.h"
 #include "cpu.h"
 #include "instructions.h"
+#include "version.h"
 
 int main(int argc, char *argv[])
 {
+   int c, opt_idx = 0;	// getopt variables
+								//
 	// Track performance
 	int cycleCount = 0;
-
-	// Create processor and memory
-	membus bus;
-	CPU cpu;
-	initialize_bus(&bus);
-	initialize_cpu(&cpu, &bus);
 
 	// Addresses of memory segments for quick reference
 	word zero_page = 0x00;
 	word stack = 0x100;
 	word data = DEF_DATA_ADDR;
 	word code = DEF_CODE_ADDR;
+
+   // Parse and handle any options
+   opterr = 0;
+
+   struct option long_opts[] = 
+   {
+      {"version", no_argument, 0, 'v'},
+      {"enable-break", required_argument, 0, 'B'},
+      {0, 0, 0, 0}
+   };
+
+   while ((c = getopt_long(argc, argv, "vB", long_opts, &opt_idx)) != -1)
+      switch (c)
+      {
+	 case 'v':
+	    printf("em6502 (6502 cpu emulator) %.1f\n", VERSION);
+	    printf("Copyright (c) %d Brian K. Niece\n", COPYRIGHT);
+	    printf("Built %s\n", __DATE__);
+	    return 0;
+	    break;
+	 case 'B':
+		 printf("Fully implemented BRK -- use NOP to end program\n\n");
+	    break;
+      }
+
+	// Create processor and memory
+	membus bus;
+	CPU cpu;
+	initialize_bus(&bus);
+	initialize_cpu(&cpu, &bus);
 
 	// Load code and data, bail out on error
 	// 		(Data not currently implemented)

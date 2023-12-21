@@ -1157,11 +1157,12 @@ int do_JSR_abs(CPU *cpu)
 	cpu->PC++;
 
 	// Cycle 1: push high byte of return address on stack, decrement SP
-	write(*cpu->bus, 0x100 + cpu->SP, cpu->PC >> 8);
+	//    This is actually the final byte of the instruction
+	write(*cpu->bus, 0x100 + cpu->SP, (cpu->PC + 1) >> 8);
 	cpu->SP--;
 
 	// Cycle 2: push low byte of return address on stack, decrement SP
-	write(*cpu->bus, 0x0100 + cpu->SP, (cpu->PC & 0xFF) + 1);
+	write(*cpu->bus, 0x0100 + cpu->SP, (cpu->PC + 1) & 0xFF);
 	cpu->SP--;
 	
 	// Cycle 3: fetch low byte of address, incement PC
@@ -1906,8 +1907,43 @@ int do_NOP_impl(CPU *cpu)
 	return ncycles;
 }
 
+int do_RTI_impl(CPU *cpu)
+// Return from interupt with implied addressing
+{
+	int nbytes = 1;
+	int ncycles = 6;
+
+	log_op_start(cpu, "RTI impl", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: internal operation
+	
+	// Cycle 2: internal operation
+
+	// Cycle 3: increment stack pointer, pull status register
+	cpu->SP++;
+	cpu->SR = read(*cpu->bus, 0x100 + cpu->SP);
+
+	// Cycle 4: increment stack pointer, pull low byte of return address
+	cpu->SP++;
+	byte adl = read(*cpu->bus, 0x100 + cpu->SP);
+
+	// Cycle 5: pull high byte of return address from stack
+	cpu->SP++;
+	byte adh = read(*cpu->bus, 0x100 + cpu->SP);
+
+	//   Put return address into PC
+	cpu->PC = adl + (adh << 8);
+
+	log_op_end(cpu, adl, ncycles);
+
+	return ncycles;
+}
+
 int do_RTS_impl(CPU *cpu)
-// Return from subroutine with addressing
+// Return from subroutine with implied addressing
 {
 	int nbytes = 1;
 	int ncycles = 6;
@@ -4262,7 +4298,7 @@ do_NOP_impl, 	// 0x3C
 do_NOP_impl, 	// 0x3D
 do_NOP_impl, 	// 0x3E
 do_NOP_impl, 	// 0x3F
-do_NOP_impl, 	// 0x40
+do_RTI_impl, 	// 0x40
 do_NOP_impl, 	// 0x41
 do_NOP_impl, 	// 0x42
 do_NOP_impl, 	// 0x43
