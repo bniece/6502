@@ -32,10 +32,10 @@ void log_op_end(CPU *cpu, byte result, int cycles)
 
 	printf(" 0x%02X", result);
 
-	printf(" %c%c%c%c%c%c%c", cpu->SR & N ? 'N' : 'n', 
-			cpu->SR & V ? 'V' : 'v', cpu->SR & B ? 'B' : 'b', 
-			cpu->SR & D ? 'D' : 'd', cpu->SR & I ? 'I' : 'i',
-			cpu->SR & Z ? 'Z' : 'z', cpu->SR & C ? 'C' : 'c');
+	printf(" %c%c%c%c%c%c%c%c", cpu->SR & N ? 'N' : '.', 
+			cpu->SR & V ? 'V' : '.', '.', cpu->SR & B ? 'B' : '.', 
+			cpu->SR & D ? 'D' : '.', cpu->SR & I ? 'I' : '.',
+			cpu->SR & Z ? 'Z' : '.', cpu->SR & C ? 'C' : '.');
 
 	printf("\n");
 }
