@@ -16,8 +16,16 @@ void lob_op_end(CPU *cpu, byte result, int cycles);
 
 // Instruction handler functions
 int do_BRK_impl(CPU *cpu);	// 0x00
+int do_ORA_Xind(CPU *cpu);	// 0x01
+int do_ORA_zpg(CPU *cpu);	// 0x05
 int do_PHP_impl(CPU *cpu);	// 0x08
+int do_ORA_imm(CPU *cpu);	// 0x09
+int do_ORA_abs(CPU *cpu);	// 0x0D
+int do_ORA_absY(CPU *cpu);	// 0x19
 int do_BPL_rel(CPU *cpu);	// 0x10
+int do_ORA_indY(CPU *cpu);	// 0x11
+int do_ORA_zpgR(CPU *cpu);	// 0x15
+int do_ORA_absX(CPU *cpu);	// 0x1D
 int do_CLC_impl(CPU *cpu);	// 0x18
 int do_PLP_impl(CPU *cpu);	// 0x28
 int do_JSR_abs(CPU *cpu);	// 0x20

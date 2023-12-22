@@ -1985,6 +1985,361 @@ int do_JSR_abs(CPU *cpu)
 	return ncycles;
 }
 
+int do_ORA_imm(CPU *cpu)
+// OR, immediate addressing
+// 	A = A | M
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "ADC # ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	// 	Do the OR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	int result = cpu->A | M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_ORA_abs(CPU *cpu)
+// OR, absolute addressing
+// 	A = A | M
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "ORA abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3: fetch byte
+	// 	Do the OR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A | M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_ORA_absX(CPU *cpu)
+// OR, x-indexed absolute addressing
+// 	A = A | M
+{
+	int nbytes = 3;
+	int ncycles = 4;
+	byte M;				// Addend from memory
+
+	log_op_start(cpu, "ORA absX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add X to low byte
+	// 	increment PC
+	byte bah = read(*cpu->bus, cpu->PC);
+	bal = bal + cpu->X;
+	cpu->PC++;
+
+	// Cycle 3:  if no carry on bal, fetch byte and move on 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}	
+	else //	otherwise, add carry to bah and fetch byte on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 4: fetch byte
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}
+	
+	// 	Do the OR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+
+	int result = cpu->A | M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_ORA_absY(CPU *cpu)
+// OR, y-indexed absolute addressing
+// 	A = A | M
+{
+	int nbytes = 3;
+	int ncycles = 4;
+	byte M;				// Addend from memory
+
+	log_op_start(cpu, "ORA absY", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add Y to low byte
+	// 	increment PC
+	byte bah = read(*cpu->bus, cpu->PC);
+	bal = bal + cpu->Y;
+	cpu->PC++;
+
+	// Cycle 3:  if no carry on bal, fetch byte and move on 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}	
+	else //	otherwise, add carry to bah and fetch byte on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 4: fetch byte
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}
+	
+	// 	Do the OR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+
+	int result = cpu->A | M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_ORA_zpg(CPU *cpu)
+// OR, zero page addressing
+// 	A = A | M
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "ORA zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	// 	Do the OR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A | M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_ORA_zpgX(CPU *cpu)
+// OR, X indexed zero page addressing
+// 	A = A | M
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "ORA zpg,X", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3: fetch byte
+	// 	Do the OR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A | M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_ORA_Xind(CPU *cpu)
+// OR, X indexed zero page indirect addressing
+// 	A = A | M
+{
+	int nbytes = 2;
+	int ncycles = 6;
+
+	log_op_start(cpu, "ORA X,ind", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte zad = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to zpg address
+	zad = zad + cpu->X;
+
+	// Cycle 3: Fetch low byte of address, increment zpg address 
+	byte adl = read(*cpu->bus, zad);
+	zad = zad + 1;
+
+	// Cycle 4: Fetch high byte of address
+	byte adh = read(*cpu->bus, zad);
+
+	// Cycle 5: fetch byte
+	// 	Do the OR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, (adh << 8) + adl);
+
+	int result = cpu->A | M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_ORA_indY(CPU *cpu)
+// OR, zero page indirect Y indexed addressing
+// 	A = A | M
+{
+	int nbytes = 2;
+	int ncycles = 5;
+	byte M;				// Addend from memory
+
+	log_op_start(cpu, "ORA ind,Y", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte zad = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch low byte of base address
+	word bal = read(*cpu->bus, zad);
+
+	// Cycle 3: fetch high byte of base address, add Y to low byte
+	zad = zad + 1;
+	byte bah = read(*cpu->bus, zad);
+	bal = bal + cpu->Y;
+
+	// Cycle 4:  if no carry on bal, fetch byte and be done 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}	
+	else //	otherwise, add carry to bah and fetch byte on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 5:  fetch byte
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}
+
+	// 	Do the OR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	int result = cpu->A | M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
 int do_PHA_impl(CPU *cpu)
 // Push accumulator on stack
 {
@@ -5058,35 +5413,35 @@ int do_SBC_indY_BCD(CPU *cpu)
 int (*execute[])(CPU *cpu) =
 {
 do_BRK_impl, 	// 0x00
-do_NOP_impl, 	// 0x01
+do_ORA_Xind, 	// 0x01
 do_NOP_impl, 	// 0x02
 do_NOP_impl, 	// 0x03
 do_NOP_impl, 	// 0x04
-do_NOP_impl, 	// 0x05
+do_ORA_zpg, 	// 0x05
 do_NOP_impl, 	// 0x06
 do_NOP_impl, 	// 0x07
 do_PHP_impl, 	// 0x08
-do_NOP_impl, 	// 0x09
+do_ORA_imm, 	// 0x09
 do_NOP_impl, 	// 0x0A
 do_NOP_impl, 	// 0x0B
 do_NOP_impl, 	// 0x0C
-do_NOP_impl, 	// 0x0D
+do_ORA_abs, 	// 0x0D
 do_NOP_impl, 	// 0x0E
 do_NOP_impl, 	// 0x0F
 do_BPL_rel, 	// 0x10
-do_NOP_impl, 	// 0x11
+do_ORA_indY, 	// 0x11
 do_NOP_impl, 	// 0x12
 do_NOP_impl, 	// 0x13
 do_NOP_impl, 	// 0x14
-do_NOP_impl, 	// 0x15
+do_ORA_zpgX, 	// 0x15
 do_NOP_impl, 	// 0x16
 do_NOP_impl, 	// 0x17
 do_CLC_impl, 	// 0x18
-do_NOP_impl, 	// 0x19
+do_ORA_absY, 	// 0x19
 do_NOP_impl, 	// 0x1A
 do_NOP_impl, 	// 0x1B
 do_NOP_impl, 	// 0x1C
-do_NOP_impl, 	// 0x1D
+do_ORA_absX, 	// 0x1D
 do_NOP_impl, 	// 0x1E
 do_NOP_impl, 	// 0x1F
 do_JSR_abs, 	// 0x20
