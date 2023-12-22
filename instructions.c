@@ -389,7 +389,7 @@ int do_ADC_indY(CPU *cpu)
 		bal = bal & 0xFF;	// Trim off carry bit
 		ncycles += 1;
 
-		// Cycle 4:  fetch byte
+		// Cycle 5:  fetch byte
 		word addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
@@ -875,6 +875,25 @@ int do_CLC_impl(CPU *cpu)
 	return ncycles;
 }
 
+int do_CLI_impl(CPU *cpu)
+// Clear interrupt disable
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "CLI   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Clear I
+	cpu->SR &= ~I;
+
+	log_op_end(cpu, cpu->SR, ncycles);
+
+	return ncycles;
+}
+
 // CLD is below the execute array assignments
 
 int do_CLV_impl(CPU *cpu)
@@ -914,6 +933,335 @@ int do_CMP_imm(CPU *cpu)
 	byte M = read(*cpu->bus, cpu->PC);
 	cpu->PC++;
 
+	int result = cpu->A + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_CMP_abs(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = A + ~M + C
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "CMP abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3: fetch byte
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_CMP_absX(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = A + ~M + C
+{
+	int nbytes = 3;
+	int ncycles = 4;
+	byte M;				// Addend from memory
+
+	log_op_start(cpu, "CMP absX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add X to low byte
+	// 	increment PC
+	byte bah = read(*cpu->bus, cpu->PC);
+	bal = bal + cpu->X;
+	cpu->PC++;
+
+	// Cycle 3:  if no carry on bal, fetch byte and move on 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}	
+	else //	otherwise, add carry to bah and fetch byte on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 4: fetch byte
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}
+	
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
+	int result = cpu->A + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_CMP_absY(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = A + ~M + C
+{
+	int nbytes = 3;
+	int ncycles = 4;
+	byte M;				// Addend from memory
+
+	log_op_start(cpu, "CMP absY", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add X to low byte
+	// 	increment PC
+	byte bah = read(*cpu->bus, cpu->PC);
+	bal = bal + cpu->Y;
+	cpu->PC++;
+
+	// Cycle 3:  if no carry on bal, fetch byte and move on 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}	
+	else //	otherwise, add carry to bah and fetch byte on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 4: fetch byte
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}
+	
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
+	int result = cpu->A + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_CMP_zpg(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = A + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "CMP zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_CMP_zpgX(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = A + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "CMP zpgX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3: fetch byte
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_CMP_Xind(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = A + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 6;
+
+	log_op_start(cpu, "CMP Xind", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte zad = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to zpg address
+	zad = zad + cpu->X;
+
+	// Cycle 3: Fetch low byte of address, increment zpg address 
+	byte adl = read(*cpu->bus, zad);
+	zad = zad + 1;
+
+	// Cycle 4: Fetch high byte of address
+	byte adh = read(*cpu->bus, zad);
+
+	// Cycle 5: fetch byte
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
+	byte M = read(*cpu->bus, (adh << 8) + adl);
+
+	int result = cpu->A + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_CMP_indY(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = A + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 5;
+	byte M;				// Addend from memory
+
+	log_op_start(cpu, "CMP indY", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte zad = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch low byte of base address
+	word bal = read(*cpu->bus, zad);
+
+	// Cycle 3: fetch high byte of base address, add Y to low byte
+	zad = zad + 1;
+	byte bah = read(*cpu->bus, zad);
+	bal = bal + cpu->Y;
+
+	// Cycle 4:  if no carry on bal, fetch byte and be done 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}	
+	else //	otherwise, add carry to bah and fetch byte on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 5:  fetch byte
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}
+
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
 	int result = cpu->A + (~M&0xFF) + 1;
 	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
 	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
@@ -2364,6 +2712,25 @@ int do_SEC_impl(CPU *cpu)
 
 	// Cycle 1: Set C
 	cpu->SR |= C;
+
+	log_op_end(cpu, cpu->SR, ncycles);
+
+	return ncycles;
+}
+
+int do_SEI_impl(CPU *cpu)
+// Set interrupt disable
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "SEI   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: Set I
+	cpu->SR |= I;
 
 	log_op_end(cpu, cpu->SR, ncycles);
 
@@ -4322,7 +4689,7 @@ do_NOP_impl, 	// 0x54
 do_NOP_impl, 	// 0x55
 do_NOP_impl, 	// 0x56
 do_NOP_impl, 	// 0x57
-do_NOP_impl, 	// 0x58
+do_CLI_impl, 	// 0x58
 do_NOP_impl, 	// 0x59
 do_NOP_impl, 	// 0x5A
 do_NOP_impl, 	// 0x5B
@@ -4354,7 +4721,7 @@ do_NOP_impl, 	// 0x74
 do_ADC_zpgX, 	// 0x75
 do_NOP_impl, 	// 0x76
 do_NOP_impl, 	// 0x77
-do_NOP_impl, 	// 0x78
+do_SEI_impl, 	// 0x78
 do_ADC_absY, 	// 0x79
 do_NOP_impl, 	// 0x7A
 do_NOP_impl, 	// 0x7B
@@ -4427,11 +4794,11 @@ do_LDA_absX, 	// 0xBD
 do_LDX_absY, 	// 0xBE
 do_NOP_impl, 	// 0xBF
 do_CPY_imm, 	// 0xC0
-do_NOP_impl, 	// 0xC1
+do_CMP_Xind, 	// 0xC1
 do_NOP_impl, 	// 0xC2
 do_NOP_impl, 	// 0xC3
 do_NOP_impl, 	// 0xC4
-do_NOP_impl, 	// 0xC5
+do_CMP_zpg, 	// 0xC5
 do_NOP_impl, 	// 0xC6
 do_NOP_impl, 	// 0xC7
 do_INY_impl, 	// 0xC8
@@ -4439,23 +4806,23 @@ do_CMP_imm, 	// 0xC9
 do_DEX_impl, 	// 0xCA
 do_NOP_impl, 	// 0xCB
 do_NOP_impl, 	// 0xCC
-do_NOP_impl, 	// 0xCD
+do_CMP_abs, 	// 0xCD
 do_NOP_impl, 	// 0xCE
 do_NOP_impl, 	// 0xCF
 do_BNE_rel, 	// 0xD0
-do_NOP_impl, 	// 0xD1
+do_CMP_indY, 	// 0xD1
 do_NOP_impl, 	// 0xD2
 do_NOP_impl, 	// 0xD3
 do_NOP_impl, 	// 0xD4
-do_NOP_impl, 	// 0xD5
+do_CMP_zpgX, 	// 0xD5
 do_NOP_impl, 	// 0xD6
 do_NOP_impl, 	// 0xD7
 do_CLD_impl, 	// 0xD8
-do_NOP_impl, 	// 0xD9
+do_CMP_absY, 	// 0xD9
 do_NOP_impl, 	// 0xDA
 do_NOP_impl, 	// 0xDB
 do_NOP_impl, 	// 0xDC
-do_NOP_impl, 	// 0xDD
+do_CMP_absX, 	// 0xDD
 do_NOP_impl, 	// 0xDE
 do_NOP_impl, 	// 0xDF
 do_CPX_imm, 	// 0xE0

@@ -1,5 +1,7 @@
 Instructions to add:
-
+CPX
+CPY
+DEC, INC
 
 run BCD test program
 16-bit addition
@@ -68,9 +70,9 @@ BIT
 **BVS
 **CLC
 **CLD
-CLI
+**CLI
 **CLV
-CMP
+**CMP
 CPX
 CPY
 DEC
@@ -94,12 +96,12 @@ ORA
 **PLP
 ROL
 ROR
-RTI
+**RTI
 **RTS
 **SBC
 **SEC
 **SED
-SEI
+**SEI
 **STA
 **STX
 **STY

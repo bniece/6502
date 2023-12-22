@@ -1,7 +1,7 @@
 ;test_RTI_impl
 ;Expected outcome:
 ;	A = 0x2B
-;	Carry not set
+;	C = 0
 * = $0600
 
 LDA #$06		; Set up stack as if it there was an interrupt
