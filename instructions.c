@@ -411,6 +411,361 @@ int do_ADC_indY(CPU *cpu)
 	return ncycles;
 }
 
+int do_AND_imm(CPU *cpu)
+// AND, immediate addressing
+// 	A = A & M
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "AND # ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	// 	Do the AND operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	int result = cpu->A & M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_AND_abs(CPU *cpu)
+// AND, absolute addressing
+// 	A = A & M
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "AND abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3: fetch byte
+	// 	Do the AND operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A & M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_AND_absX(CPU *cpu)
+// AND, x-indexed absolute addressing
+// 	A = A & M
+{
+	int nbytes = 3;
+	int ncycles = 4;
+	byte M;				// Addend from memory
+
+	log_op_start(cpu, "AND absX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add X to low byte
+	// 	increment PC
+	byte bah = read(*cpu->bus, cpu->PC);
+	bal = bal + cpu->X;
+	cpu->PC++;
+
+	// Cycle 3:  if no carry on bal, fetch byte and move on 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}	
+	else //	otherwise, add carry to bah and fetch byte on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 4: fetch byte
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}
+	
+	// 	Do the AND operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+
+	int result = cpu->A & M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_AND_absY(CPU *cpu)
+// AND, y-indexed absolute addressing
+// 	A = A & M
+{
+	int nbytes = 3;
+	int ncycles = 4;
+	byte M;				// Addend from memory
+
+	log_op_start(cpu, "AND absY", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add Y to low byte
+	// 	increment PC
+	byte bah = read(*cpu->bus, cpu->PC);
+	bal = bal + cpu->Y;
+	cpu->PC++;
+
+	// Cycle 3:  if no carry on bal, fetch byte and move on 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}	
+	else //	otherwise, add carry to bah and fetch byte on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 4: fetch byte
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}
+	
+	// 	Do the AND operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+
+	int result = cpu->A & M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_AND_zpg(CPU *cpu)
+// AND, zero page addressing
+// 	A = A & M
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "AND zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	// 	Do the AND operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A & M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_AND_zpgX(CPU *cpu)
+// AND, X indexed zero page addressing
+// 	A = A & M
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "AND zpg,X", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3: fetch byte
+	// 	Do the AND operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A & M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_AND_Xind(CPU *cpu)
+// AND, X indexed zero page indirect addressing
+// 	A = A & M
+{
+	int nbytes = 2;
+	int ncycles = 6;
+
+	log_op_start(cpu, "AND X,ind", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte zad = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to zpg address
+	zad = zad + cpu->X;
+
+	// Cycle 3: Fetch low byte of address, increment zpg address 
+	byte adl = read(*cpu->bus, zad);
+	zad = zad + 1;
+
+	// Cycle 4: Fetch high byte of address
+	byte adh = read(*cpu->bus, zad);
+
+	// Cycle 5: fetch byte
+	// 	Do the AND operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, (adh << 8) + adl);
+
+	int result = cpu->A & M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_AND_indY(CPU *cpu)
+// AND, zero page indirect Y indexed addressing
+// 	A = A & M
+{
+	int nbytes = 2;
+	int ncycles = 5;
+	byte M;				// Addend from memory
+
+	log_op_start(cpu, "AND ind,Y", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte zad = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch low byte of base address
+	word bal = read(*cpu->bus, zad);
+
+	// Cycle 3: fetch high byte of base address, add Y to low byte
+	zad = zad + 1;
+	byte bah = read(*cpu->bus, zad);
+	bal = bal + cpu->Y;
+
+	// Cycle 4:  if no carry on bal, fetch byte and be done 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}	
+	else //	otherwise, add carry to bah and fetch byte on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 5:  fetch byte
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}
+
+	// 	Do the AND operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	int result = cpu->A & M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
 int do_BCC_rel(CPU *cpu)
 // Branch on carry clear
 {
@@ -1992,7 +2347,7 @@ int do_ORA_imm(CPU *cpu)
 	int nbytes = 2;
 	int ncycles = 2;
 
-	log_op_start(cpu, "ADC # ", nbytes);
+	log_op_start(cpu, "ORA # ", nbytes);
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5445,35 +5800,35 @@ do_ORA_absX, 	// 0x1D
 do_NOP_impl, 	// 0x1E
 do_NOP_impl, 	// 0x1F
 do_JSR_abs, 	// 0x20
-do_NOP_impl, 	// 0x21
+do_AND_Xind, 	// 0x21
 do_NOP_impl, 	// 0x22
 do_NOP_impl, 	// 0x23
 do_NOP_impl, 	// 0x24
-do_NOP_impl, 	// 0x25
+do_AND_zpg, 	// 0x25
 do_NOP_impl, 	// 0x26
 do_NOP_impl, 	// 0x27
-do_PLP_impl, 	// 0x28
-do_NOP_impl, 	// 0x29
+do_NOP_impl, 	// 0x28
+do_AND_imm, 	// 0x29
 do_NOP_impl, 	// 0x2A
 do_NOP_impl, 	// 0x2B
 do_NOP_impl, 	// 0x2C
-do_NOP_impl, 	// 0x2D
+do_AND_abs, 	// 0x2D
 do_NOP_impl, 	// 0x2E
 do_NOP_impl, 	// 0x2F
 do_BMI_rel, 	// 0x30
-do_NOP_impl, 	// 0x31
+do_AND_indY, 	// 0x31
 do_NOP_impl, 	// 0x32
 do_NOP_impl, 	// 0x33
 do_NOP_impl, 	// 0x34
-do_NOP_impl, 	// 0x35
+do_AND_zpgX, 	// 0x35
 do_NOP_impl, 	// 0x36
 do_NOP_impl, 	// 0x37
 do_SEC_impl, 	// 0x38
-do_NOP_impl, 	// 0x39
+do_AND_absY, 	// 0x39
 do_NOP_impl, 	// 0x3A
 do_NOP_impl, 	// 0x3B
 do_NOP_impl, 	// 0x3C
-do_NOP_impl, 	// 0x3D
+do_AND_absX, 	// 0x3D
 do_NOP_impl, 	// 0x3E
 do_NOP_impl, 	// 0x3F
 do_RTI_impl, 	// 0x40
@@ -5637,12 +5992,12 @@ do_CMP_absX, 	// 0xDD
 do_DEC_absX, 	// 0xDE
 do_NOP_impl, 	// 0xDF
 do_CPX_imm, 	// 0xE0
-do_SBC_Xind, 	// 0xE1
+do_NOP_impl, 	// 0xE1
 do_NOP_impl, 	// 0xE2
 do_NOP_impl, 	// 0xE3
 do_CPX_zpg, 	// 0xE4
 do_SBC_zpg, 	// 0xE5
-do_INC_zpg, 	// 0xE6
+do_NOP_impl, 	// 0xE6
 do_NOP_impl, 	// 0xE7
 do_INX_impl, 	// 0xE8
 do_SBC_imm, 	// 0xE9
@@ -5650,15 +6005,15 @@ do_NOP_impl, 	// 0xEA
 do_NOP_impl, 	// 0xEB
 do_CPX_abs, 	// 0xEC
 do_SBC_abs, 	// 0xED
-do_INC_abs, 	// 0xEE
+do_NOP_impl, 	// 0xEE
 do_NOP_impl, 	// 0xEF
 do_BEQ_rel, 	// 0xF0
 do_SBC_indY, 	// 0xF1
 do_NOP_impl, 	// 0xF2
 do_NOP_impl, 	// 0xF3
 do_NOP_impl, 	// 0xF4
-do_SBC_zpgX, 	// 0xF5
-do_INC_zpgX, 	// 0xF6
+do_ADC_zpgX, 	// 0xF5
+do_NOP_impl, 	// 0xF6
 do_NOP_impl, 	// 0xF7
 do_SED_impl, 	// 0xF8
 do_SBC_absY, 	// 0xF9
@@ -5666,7 +6021,7 @@ do_NOP_impl, 	// 0xFA
 do_NOP_impl, 	// 0xFB
 do_NOP_impl, 	// 0xFC
 do_SBC_absX, 	// 0xFD
-do_INC_absX, 	// 0xFE
+do_NOP_impl, 	// 0xFE
 do_NOP_impl  	// 0xFF
 };
 
