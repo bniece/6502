@@ -1,7 +1,4 @@
 Instructions to add:
-CPX
-CPY
-DEC, INC
 
 run BCD test program
 16-bit addition
@@ -73,13 +70,13 @@ BIT
 **CLI
 **CLV
 **CMP
-CPX
-CPY
-DEC
+**CPX
+**CPY
+**DEC
 **DEX
 **DEY
 EOR
-INC
+**INC
 **INX
 **INY
 **JMP

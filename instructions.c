@@ -1308,6 +1308,80 @@ int do_CPX_imm(CPU *cpu)
 	return ncycles;
 }
 
+int do_CPX_abs(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = X + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "CPX abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3: fetch byte
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->X + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return ncycles;
+}
+
+int do_CPX_zpg(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = X + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "CPX zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->X + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return ncycles;
+}
+
 int do_CPY_imm(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = Y + ~M + C
@@ -1336,6 +1410,388 @@ int do_CPY_imm(CPU *cpu)
 	set_Z(cpu, result);
 
 	log_op_end(cpu, cpu->Y, ncycles);
+
+	return ncycles;
+}
+
+int do_CPY_abs(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = Y + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "CPY abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3: fetch byte
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->Y + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->Y, ncycles);
+
+	return ncycles;
+}
+
+int do_CPY_zpg(CPU *cpu)
+// Subtract but don't update A, set Z, C, N
+// 	Z,C,N = Y + ~M + C
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "CPY zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	// 	Do the subtraction and update C
+	// 	Set N,Z if necessary
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->Y + (~M&0xFF) + 1;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	//		Subtraction is done as if preceded by SEC, so just add 1 to make the
+	//		twos complement
+	set_C(cpu, result);
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->X, ncycles);
+
+	return ncycles;
+}
+
+int do_DEC_abs(CPU *cpu)
+// Decrement memory
+{
+	int nbytes = 3;
+	int ncycles = 6;
+
+	log_op_start(cpu, "DEC abs ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 4: Decrement byte
+	// 	set N,Z if necessary
+	M--;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	// Cycle 5: Store byte back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, M, ncycles);
+
+	return ncycles;
+}
+
+int do_DEC_absX(CPU *cpu)
+// Decrement memory
+{
+	int nbytes = 3;
+	int ncycles = 7;
+
+	log_op_start(cpu, "DEC absX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add X to low byte
+	// 	increment PC
+	byte bah = read(*cpu->bus, cpu->PC);
+	bal = bal + cpu->X;
+	cpu->PC++;
+
+	// Cycle 3:  add carry to high byte if necessary
+	if (bal > 255)
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+	}
+
+	// Cycle 4: fetch byte
+	word addr = (bah << 8) + bal;
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 5: Decrement byte
+	// 	set N,Z if necessary
+	M--;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	// Cycle 6: Store byte back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, M, ncycles);
+
+	return ncycles;
+}
+
+int do_DEC_zpg(CPU *cpu)
+// Decrement memory
+{
+	int nbytes = 2;
+	int ncycles = 5;
+
+	log_op_start(cpu, "DEC zpg ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 3: Decrement byte
+	// 	set N,Z if necessary
+	M--;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	// Cycle 4: Store byte back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, M, ncycles);
+
+	return ncycles;
+}
+
+int do_DEC_zpgX(CPU *cpu)
+// Decrement memory
+{
+	int nbytes = 2;
+	int ncycles = 6;
+
+	log_op_start(cpu, "DEC zpgX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 4: Decrement byte
+	// 	set N,Z if necessary
+	M--;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	// Cycle 5: Store byte back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, M, ncycles);
+
+	return ncycles;
+}
+
+int do_INC_abs(CPU *cpu)
+// Increment memory
+{
+	int nbytes = 3;
+	int ncycles = 6;
+
+	log_op_start(cpu, "INC abs ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 4: Increment byte
+	// 	set N,Z if necessary
+	M++;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	// Cycle 5: Store byte back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, M, ncycles);
+
+	return ncycles;
+}
+
+int do_INC_absX(CPU *cpu)
+// Increment memory
+{
+	int nbytes = 3;
+	int ncycles = 7;
+
+	log_op_start(cpu, "INC absX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add X to low byte
+	// 	increment PC
+	byte bah = read(*cpu->bus, cpu->PC);
+	bal = bal + cpu->X;
+	cpu->PC++;
+
+	// Cycle 3:  add carry to high byte if necessary
+	if (bal > 255)
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+	}
+
+	// Cycle 4: fetch byte
+	word addr = (bah << 8) + bal;
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 5: Decrement byte
+	// 	set N,Z if necessary
+	M++;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	// Cycle 6: Store byte back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, M, ncycles);
+
+	return ncycles;
+}
+
+int do_INC_zpg(CPU *cpu)
+// Increment memory
+{
+	int nbytes = 2;
+	int ncycles = 5;
+
+	log_op_start(cpu, "INC zpg ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 3: Decrement byte
+	// 	set N,Z if necessary
+	M++;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	// Cycle 4: Store byte back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, M, ncycles);
+
+	return ncycles;
+}
+
+int do_INC_zpgX(CPU *cpu)
+// Increment memory
+{
+	int nbytes = 2;
+	int ncycles = 6;
+
+	log_op_start(cpu, "INC zpgX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 4: Decrement byte
+	// 	set N,Z if necessary
+	M++;
+
+	set_N(cpu, cpu->X);
+	set_Z(cpu, cpu->X);
+
+	// Cycle 5: Store byte back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, M, ncycles);
 
 	return ncycles;
 }
@@ -4797,17 +5253,17 @@ do_CPY_imm, 	// 0xC0
 do_CMP_Xind, 	// 0xC1
 do_NOP_impl, 	// 0xC2
 do_NOP_impl, 	// 0xC3
-do_NOP_impl, 	// 0xC4
+do_CPY_zpg, 	// 0xC4
 do_CMP_zpg, 	// 0xC5
-do_NOP_impl, 	// 0xC6
+do_DEC_zpg, 	// 0xC6
 do_NOP_impl, 	// 0xC7
 do_INY_impl, 	// 0xC8
 do_CMP_imm, 	// 0xC9
 do_DEX_impl, 	// 0xCA
 do_NOP_impl, 	// 0xCB
-do_NOP_impl, 	// 0xCC
+do_CPY_abs, 	// 0xCC
 do_CMP_abs, 	// 0xCD
-do_NOP_impl, 	// 0xCE
+do_DEC_abs, 	// 0xCE
 do_NOP_impl, 	// 0xCF
 do_BNE_rel, 	// 0xD0
 do_CMP_indY, 	// 0xD1
@@ -4815,7 +5271,7 @@ do_NOP_impl, 	// 0xD2
 do_NOP_impl, 	// 0xD3
 do_NOP_impl, 	// 0xD4
 do_CMP_zpgX, 	// 0xD5
-do_NOP_impl, 	// 0xD6
+do_DEC_zpgX, 	// 0xD6
 do_NOP_impl, 	// 0xD7
 do_CLD_impl, 	// 0xD8
 do_CMP_absY, 	// 0xD9
@@ -4823,23 +5279,23 @@ do_NOP_impl, 	// 0xDA
 do_NOP_impl, 	// 0xDB
 do_NOP_impl, 	// 0xDC
 do_CMP_absX, 	// 0xDD
-do_NOP_impl, 	// 0xDE
+do_DEC_absX, 	// 0xDE
 do_NOP_impl, 	// 0xDF
 do_CPX_imm, 	// 0xE0
 do_SBC_Xind, 	// 0xE1
 do_NOP_impl, 	// 0xE2
 do_NOP_impl, 	// 0xE3
-do_NOP_impl, 	// 0xE4
+do_CPX_zpg, 	// 0xE4
 do_SBC_zpg, 	// 0xE5
-do_NOP_impl, 	// 0xE6
+do_INC_zpg, 	// 0xE6
 do_NOP_impl, 	// 0xE7
 do_INX_impl, 	// 0xE8
 do_SBC_imm, 	// 0xE9
 do_NOP_impl, 	// 0xEA
 do_NOP_impl, 	// 0xEB
-do_NOP_impl, 	// 0xEC
+do_CPX_abs, 	// 0xEC
 do_SBC_abs, 	// 0xED
-do_NOP_impl, 	// 0xEE
+do_INC_abs, 	// 0xEE
 do_NOP_impl, 	// 0xEF
 do_BEQ_rel, 	// 0xF0
 do_SBC_indY, 	// 0xF1
@@ -4847,7 +5303,7 @@ do_NOP_impl, 	// 0xF2
 do_NOP_impl, 	// 0xF3
 do_NOP_impl, 	// 0xF4
 do_SBC_zpgX, 	// 0xF5
-do_NOP_impl, 	// 0xF6
+do_INC_zpgX, 	// 0xF6
 do_NOP_impl, 	// 0xF7
 do_SED_impl, 	// 0xF8
 do_SBC_absY, 	// 0xF9
@@ -4855,7 +5311,7 @@ do_NOP_impl, 	// 0xFA
 do_NOP_impl, 	// 0xFB
 do_NOP_impl, 	// 0xFC
 do_SBC_absX, 	// 0xFD
-do_NOP_impl, 	// 0xFE
+do_INC_absX, 	// 0xFE
 do_NOP_impl  	// 0xFF
 };
 

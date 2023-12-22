@@ -1,23 +1,17 @@
-;test_CMP_indY
+;test_CPY_abs
 ;Expected outcome:
 ;	A N V Z C
 ;	0200: 2A 00 00 01 01
 ;	0210: 2B 00 00 00 01
 ;	0220: 29 01 00 00 00
 LDX #$01	; for marking set flags
-LDY #$0
 
 LDA #$2A
 STA $02FF
 
-LDA #$FE
-STA $00
-LDA #$02
-STA $01
-
-LDA #$2A
-CMP ($00),Y	; CMP acts as if preceded by SEC
-STA $0200
+LDY #$2A
+CPY $02FF	; CPY acts as if preceded by SEC
+STY $0200
 BPL pos1	; Save N flag
 STX $0201
 pos1:
@@ -31,9 +25,9 @@ BCC noC1	; Save C flag
 STX $0204
 noC1:
 
-LDA #$2B
-CMP ($00),Y
-STA $0210
+LDY #$2B
+CPY $02FF
+STY $0210
 BPL pos2	; Save N flag
 STX $0211
 pos2:
@@ -47,9 +41,9 @@ BCC noC2	; Save C flag
 STX $0214
 noC2:
 
-LDA #$29
-CMP ($00),Y
-STA $0220
+LDY #$29
+CPY $02FF
+STY $0220
 BPL pos3	; Save N flag
 STX $0221
 pos3:
