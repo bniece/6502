@@ -1,57 +1,48 @@
-;test_ASL_zpg
+;test_LSR_A
 ;Expected outcome:
 ;	A N Z C
-;	00: 54 00 00 00
-;	10: 00 00 01 01
-;	20: 80 01 00 00
-LDX #$00 ; zero page tends to be cluttered.  Clear it out
-LDA #$00
-loop:
-STA $00,X
-INX
-CPX #$2F
-BNE loop
-
+;	0200: 15 00 00 00
+;	0210: 00 00 01 01
+;	0220: 01 00 00 00
 LDY #$01	; for marking flags
 
 LDA #$2A
-STA $00
-LDA #$80
-STA $10
-LDA #$40
-STA $20
-
-ASL $00
+LSR
+STA $0200
 BPL pos1	; Save N flag
-STY $01
+STY $0201
 pos1:
 BNE zero1	; Save Z flag
-STY $02
+STY $0202
 zero1: 
 BCC carry1	; Save C flag
-STY $03
+STY $0203
 carry1:
 
-ASL $10
+LDA #$01
+LSR
+STA $0210
 BPL pos2	; Save N flag
-STY $11
+STY $0211
 pos2:
 BNE zero2	; Save Z flag
-STY $12
+STY $0212
 zero2: 
 BCC carry2	; Save C flag
-STY $13
+STY $0213
 carry2:
 
-ASL $20
+LDA #$02
+LSR
+STA $0220
 BPL pos3	; Save N flag
-STY $21
+STY $0221
 pos3:
 BNE zero3	; Save Z flag
-STY $22
+STY $0222
 zero3: 
 BCC carry3	; Save C flag
-STY $23
+STY $0223
 carry3:
 
 BRK

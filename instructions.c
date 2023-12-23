@@ -772,7 +772,7 @@ int do_ASL_A(CPU *cpu)
 	int nbytes = 1;
 	int ncycles = 2;
 
-	log_op_start(cpu, "ASL   ", nbytes);
+	log_op_start(cpu, "ASL A ", nbytes);
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -803,7 +803,7 @@ int do_ASL_abs(CPU *cpu)
 	int nbytes = 1;
 	int ncycles = 2;
 
-	log_op_start(cpu, "ASL   ", nbytes);
+	log_op_start(cpu, "ASL abs", nbytes);
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -848,7 +848,7 @@ int do_ASL_absX(CPU *cpu)
 	int nbytes = 3;
 	int ncycles = 7;
 
-	log_op_start(cpu, "ASL abs", nbytes);
+	log_op_start(cpu, "ASL absX", nbytes);
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -975,7 +975,7 @@ int do_ASL_zpgX(CPU *cpu)
 	set_N(cpu, M);
 	set_Z(cpu, M);
 
-	// Cycle 4: Store back in memory
+	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
 	log_op_end(cpu, cpu->A, ncycles);
@@ -4057,6 +4057,228 @@ int do_LDY_zpgX(CPU *cpu)
 	return ncycles;
 }
 
+int do_LSR_A(CPU *cpu)
+// Logical shift right accumulator
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "LSR A ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: Copy bit 0 to carry and shift right
+	if ((cpu->A & 0x1) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	cpu->A >>= 1;
+
+	//   Clear N
+	cpu->SR &= ~N;
+	//   Set Z if necessary
+	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_LSR_abs(CPU *cpu)
+// Logical shift right absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 6;
+
+	log_op_start(cpu, "LSR abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 4: Copy bit 0 to carry and shift right
+	if ((M & 0x1) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	M >>= 1;
+
+	//   Clear N
+	cpu->SR &= ~N;
+	//   Set Z if necessary
+	set_Z(cpu, M);
+
+	// Cycle 5: Store back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_LSR_absX(CPU *cpu)
+// Logical shift rigth x-indexed absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 7;
+
+	log_op_start(cpu, "LSR absX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add X to low byte
+	// 	increment PC
+	byte bah = read(*cpu->bus, cpu->PC);
+	bal = bal + cpu->X;
+	cpu->PC++;
+
+	// Cycle 3:  add carry to high byte if necessary
+	if (bal > 255)
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+	}
+
+	// Cycle 4: fetch byte
+	word addr = (bah << 8) + bal;
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 5: Copy bit 0 to carry and shift right
+	if ((M & 0x1) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	M >>= 1;
+
+	//   Clear N
+	cpu->SR &= ~N;
+	//   Set Z if necessary
+	set_Z(cpu, M);
+
+	// Cycle 6: Store back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_LSR_zpg(CPU *cpu)
+// Logical shift right zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 5;
+
+	log_op_start(cpu, "LSR zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 3: Copy bit 0 to carry and shift right
+	if ((M & 0x1) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	M >>= 1;
+
+	//   Clear N
+	cpu->SR &= ~N;
+	//   Set Z if necessary
+	set_Z(cpu, M);
+
+	// Cycle 4: Store back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_LSR_zpgX(CPU *cpu)
+// Logical shift right x-indexed zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 6;
+
+	log_op_start(cpu, "LSR zpgX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 4: Copy bit 0 to carry and shift rigth
+	if ((M & 0x1) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	M >>= 1;
+
+	//   Clear N
+	cpu->SR &= ~N;
+	//   Set Z if necessary
+	set_Z(cpu, M);
+
+	// Cycle 5: Store back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
 int do_NOP_impl(CPU *cpu)
 // No operation
 {
@@ -6491,15 +6713,15 @@ do_NOP_impl, 	// 0x42
 do_NOP_impl, 	// 0x43
 do_NOP_impl, 	// 0x44
 do_EOR_zpg, 	// 0x45
-do_NOP_impl, 	// 0x46
+do_LSR_zpg, 	// 0x46
 do_NOP_impl, 	// 0x47
 do_PHA_impl, 	// 0x48
 do_EOR_imm, 	// 0x49
-do_NOP_impl, 	// 0x4A
+do_LSR_A, 		// 0x4A
 do_NOP_impl, 	// 0x4B
 do_JMP_abs, 	// 0x4C
 do_EOR_abs, 	// 0x4D
-do_NOP_impl, 	// 0x4E
+do_LSR_abs, 	// 0x4E
 do_NOP_impl, 	// 0x4F
 do_BVC_rel, 	// 0x50
 do_EOR_indY, 	// 0x51
@@ -6507,7 +6729,7 @@ do_NOP_impl, 	// 0x52
 do_NOP_impl, 	// 0x53
 do_NOP_impl, 	// 0x54
 do_EOR_zpgX, 	// 0x55
-do_NOP_impl, 	// 0x56
+do_LSR_zpgX, 	// 0x56
 do_NOP_impl, 	// 0x57
 do_CLI_impl, 	// 0x58
 do_EOR_absY, 	// 0x59
@@ -6515,7 +6737,7 @@ do_NOP_impl, 	// 0x5A
 do_NOP_impl, 	// 0x5B
 do_NOP_impl, 	// 0x5C
 do_EOR_absX, 	// 0x5D
-do_NOP_impl, 	// 0x5E
+do_LSR_absX, 	// 0x5E
 do_NOP_impl, 	// 0x5F
 do_RTS_impl, 	// 0x60
 do_ADC_Xind, 	// 0x61
