@@ -928,6 +928,88 @@ int do_BEQ_rel(CPU *cpu)
 	return ncycles;
 }
 
+int do_BIT_abs(CPU *cpu)
+// BIT, absolute addressing
+// 	N, V from M, Z from M & A
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "BIT abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3: fetch byte
+	// 	Do the AND operation
+	// 	Set N,V,Z as necessary
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A & M;
+
+	set_N(cpu, M);
+	if ((M & V) == 0)
+	{
+		cpu->SR &= ~V;
+	}
+	else
+	{
+		cpu->SR |= V;
+	}
+	set_Z(cpu, result);
+
+	log_op_end(cpu, M, ncycles);
+
+	return ncycles;
+}
+
+int do_BIT_zpg(CPU *cpu)
+// BIT, zero page addressing
+// 	N, V from M, Z from M & A
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "BIT zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	// 	Do the AND operation
+	// 	Set N,V,Z as necessary
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A & M;
+
+	set_N(cpu, M);
+	if ((M & V) == 0)
+	{
+		cpu->SR &= ~V;
+	}
+	else
+	{
+		cpu->SR |= V;
+	}
+	set_Z(cpu, result);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
 int do_BMI_rel(CPU *cpu)
 // Branch on result minus
 {
@@ -1993,6 +2075,361 @@ int do_DEC_zpgX(CPU *cpu)
 	write(*cpu->bus, addr, M);
 
 	log_op_end(cpu, M, ncycles);
+
+	return ncycles;
+}
+
+int do_EOR_imm(CPU *cpu)
+// XOR, immediate addressing
+// 	A = A ^ M
+{
+	int nbytes = 2;
+	int ncycles = 2;
+
+	log_op_start(cpu, "EOR # ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch byte and increment PC
+	// 	Do the XOR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	int result = cpu->A ^ M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_EOR_abs(CPU *cpu)
+// XOR, absolute addressing
+// 	A = A ^ M
+{
+	int nbytes = 3;
+	int ncycles = 4;
+
+	log_op_start(cpu, "EOR abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3: fetch byte
+	// 	Do the XOR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A ^ M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_EOR_absX(CPU *cpu)
+// XOR, x-indexed absolute addressing
+// 	A = A ^ M
+{
+	int nbytes = 3;
+	int ncycles = 4;
+	byte M;				// Addend from memory
+
+	log_op_start(cpu, "EOR absX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add X to low byte
+	// 	increment PC
+	byte bah = read(*cpu->bus, cpu->PC);
+	bal = bal + cpu->X;
+	cpu->PC++;
+
+	// Cycle 3:  if no carry on bal, fetch byte and move on 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}	
+	else //	otherwise, add carry to bah and fetch byte on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 4: fetch byte
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}
+	
+	// 	Do the XOR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+
+	int result = cpu->A ^ M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_EOR_absY(CPU *cpu)
+// XOR, y-indexed absolute addressing
+// 	A = A ^ M
+{
+	int nbytes = 3;
+	int ncycles = 4;
+	byte M;				// Addend from memory
+
+	log_op_start(cpu, "EOR absY", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add Y to low byte
+	// 	increment PC
+	byte bah = read(*cpu->bus, cpu->PC);
+	bal = bal + cpu->Y;
+	cpu->PC++;
+
+	// Cycle 3:  if no carry on bal, fetch byte and move on 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}	
+	else //	otherwise, add carry to bah and fetch byte on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 4: fetch byte
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}
+	
+	// 	Do the XOR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+
+	int result = cpu->A ^ M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_EOR_zpg(CPU *cpu)
+// XOR, zero page addressing
+// 	A = A ^ M
+{
+	int nbytes = 2;
+	int ncycles = 3;
+
+	log_op_start(cpu, "EOR zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	// 	Do the XOR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A ^ M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_EOR_zpgX(CPU *cpu)
+// XOR, X indexed zero page addressing
+// 	A = A ^ M
+{
+	int nbytes = 2;
+	int ncycles = 4;
+
+	log_op_start(cpu, "EOR zpg,X", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3: fetch byte
+	// 	Do the XOR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, addr);
+
+	int result = cpu->A ^ M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_EOR_Xind(CPU *cpu)
+// XOR, X indexed zero page indirect addressing
+// 	A = A ^ M
+{
+	int nbytes = 2;
+	int ncycles = 6;
+
+	log_op_start(cpu, "EOR X,ind", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte zad = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to zpg address
+	zad = zad + cpu->X;
+
+	// Cycle 3: Fetch low byte of address, increment zpg address 
+	byte adl = read(*cpu->bus, zad);
+	zad = zad + 1;
+
+	// Cycle 4: Fetch high byte of address
+	byte adh = read(*cpu->bus, zad);
+
+	// Cycle 5: fetch byte
+	// 	Do the XOR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	byte M = read(*cpu->bus, (adh << 8) + adl);
+
+	int result = cpu->A ^ M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_EOR_indY(CPU *cpu)
+// XOR, zero page indirect Y indexed addressing
+// 	A = A ^ M
+{
+	int nbytes = 2;
+	int ncycles = 5;
+	byte M;				// Addend from memory
+
+	log_op_start(cpu, "EOR ind,Y", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+
+	// Cycle 1: fetch zpg address, incement PC
+	byte zad = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch low byte of base address
+	word bal = read(*cpu->bus, zad);
+
+	// Cycle 3: fetch high byte of base address, add Y to low byte
+	zad = zad + 1;
+	byte bah = read(*cpu->bus, zad);
+	bal = bal + cpu->Y;
+
+	// Cycle 4:  if no carry on bal, fetch byte and be done 
+	if (bal < 256)
+	{
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}	
+	else //	otherwise, add carry to bah and fetch byte on next cycle
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+		ncycles += 1;
+
+		// Cycle 5:  fetch byte
+		word addr = (bah << 8) + bal;
+		M = read(*cpu->bus, addr);
+	}
+
+	// 	Do the XOR operation
+	// 	Set N,Z if necessary
+	// 	Store in A
+	int result = cpu->A ^ M;
+
+	set_N(cpu, result);
+	set_Z(cpu, result);
+
+	cpu->A = result;
+
+	log_op_end(cpu, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5803,7 +6240,7 @@ do_JSR_abs, 	// 0x20
 do_AND_Xind, 	// 0x21
 do_NOP_impl, 	// 0x22
 do_NOP_impl, 	// 0x23
-do_NOP_impl, 	// 0x24
+do_BIT_zpg, 	// 0x24
 do_AND_zpg, 	// 0x25
 do_NOP_impl, 	// 0x26
 do_NOP_impl, 	// 0x27
@@ -5811,7 +6248,7 @@ do_NOP_impl, 	// 0x28
 do_AND_imm, 	// 0x29
 do_NOP_impl, 	// 0x2A
 do_NOP_impl, 	// 0x2B
-do_NOP_impl, 	// 0x2C
+do_BIT_abs, 	// 0x2C
 do_AND_abs, 	// 0x2D
 do_NOP_impl, 	// 0x2E
 do_NOP_impl, 	// 0x2F
@@ -5832,35 +6269,35 @@ do_AND_absX, 	// 0x3D
 do_NOP_impl, 	// 0x3E
 do_NOP_impl, 	// 0x3F
 do_RTI_impl, 	// 0x40
-do_NOP_impl, 	// 0x41
+do_EOR_Xind, 	// 0x41
 do_NOP_impl, 	// 0x42
 do_NOP_impl, 	// 0x43
 do_NOP_impl, 	// 0x44
-do_NOP_impl, 	// 0x45
+do_EOR_zpg, 	// 0x45
 do_NOP_impl, 	// 0x46
 do_NOP_impl, 	// 0x47
 do_PHA_impl, 	// 0x48
-do_NOP_impl, 	// 0x49
+do_EOR_imm, 	// 0x49
 do_NOP_impl, 	// 0x4A
 do_NOP_impl, 	// 0x4B
 do_JMP_abs, 	// 0x4C
-do_NOP_impl, 	// 0x4D
+do_EOR_abs, 	// 0x4D
 do_NOP_impl, 	// 0x4E
 do_NOP_impl, 	// 0x4F
 do_BVC_rel, 	// 0x50
-do_NOP_impl, 	// 0x51
+do_EOR_indY, 	// 0x51
 do_NOP_impl, 	// 0x52
 do_NOP_impl, 	// 0x53
 do_NOP_impl, 	// 0x54
-do_NOP_impl, 	// 0x55
+do_EOR_zpgX, 	// 0x55
 do_NOP_impl, 	// 0x56
 do_NOP_impl, 	// 0x57
 do_CLI_impl, 	// 0x58
-do_NOP_impl, 	// 0x59
+do_EOR_absY, 	// 0x59
 do_NOP_impl, 	// 0x5A
 do_NOP_impl, 	// 0x5B
 do_NOP_impl, 	// 0x5C
-do_NOP_impl, 	// 0x5D
+do_EOR_absX, 	// 0x5D
 do_NOP_impl, 	// 0x5E
 do_NOP_impl, 	// 0x5F
 do_RTS_impl, 	// 0x60
