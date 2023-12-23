@@ -766,6 +766,223 @@ int do_AND_indY(CPU *cpu)
 	return ncycles;
 }
 
+int do_ASL_A(CPU *cpu)
+// Arithmetic shift left accumulator
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "ASL   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: Copy bit 7 (N) to carry and shift left
+	if ((cpu->A & N) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	cpu->A <<= 1;
+
+	//   Set N,Z if necessary
+	set_N(cpu, cpu->A);
+	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_ASL_abs(CPU *cpu)
+// Arithmetic shift left absolute addressing
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "ASL   ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 4: Copy bit 7 (N) to carry and shift left
+	if ((M & N) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	M <<= 1;
+
+	//   Set N,Z if necessary
+	set_N(cpu, M);
+	set_Z(cpu, M);
+
+	// Cycle 5: Store back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_ASL_absX(CPU *cpu)
+// Arithmetic shift left x-indexed absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 7;
+
+	log_op_start(cpu, "ASL abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add X to low byte
+	// 	increment PC
+	byte bah = read(*cpu->bus, cpu->PC);
+	bal = bal + cpu->X;
+	cpu->PC++;
+
+	// Cycle 3:  add carry to high byte if necessary
+	if (bal > 255)
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+	}
+
+	// Cycle 4: fetch byte
+	word addr = (bah << 8) + bal;
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 5: Copy bit 7 (N) to carry and shift left
+	if ((M & N) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	M <<= 1;
+
+	//   Set N,Z if necessary
+	set_N(cpu, M);
+	set_Z(cpu, M);
+
+	// Cycle 6: Store back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_ASL_zpg(CPU *cpu)
+// Arithmetic shift left zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 5;
+
+	log_op_start(cpu, "ASL zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 3: Copy bit 7 (N) to carry and shift left
+	if ((M & N) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	M <<= 1;
+
+	//   Set N,Z if necessary
+	set_N(cpu, M);
+	set_Z(cpu, M);
+
+	// Cycle 4: Store back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_ASL_zpgX(CPU *cpu)
+// Arithmetic shift left x-indexed zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 6;
+
+	log_op_start(cpu, "ASL zpgX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 4: Copy bit 7 (N) to carry and shift left
+	if ((M & N) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	M <<= 1;
+
+	//   Set N,Z if necessary
+	set_N(cpu, M);
+	set_Z(cpu, M);
+
+	// Cycle 4: Store back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
 int do_BCC_rel(CPU *cpu)
 // Branch on carry clear
 {
@@ -6210,15 +6427,15 @@ do_NOP_impl, 	// 0x02
 do_NOP_impl, 	// 0x03
 do_NOP_impl, 	// 0x04
 do_ORA_zpg, 	// 0x05
-do_NOP_impl, 	// 0x06
+do_ASL_zpg, 	// 0x06
 do_NOP_impl, 	// 0x07
 do_PHP_impl, 	// 0x08
 do_ORA_imm, 	// 0x09
-do_NOP_impl, 	// 0x0A
+do_ASL_A,	 	// 0x0A
 do_NOP_impl, 	// 0x0B
 do_NOP_impl, 	// 0x0C
 do_ORA_abs, 	// 0x0D
-do_NOP_impl, 	// 0x0E
+do_ASL_abs, 	// 0x0E
 do_NOP_impl, 	// 0x0F
 do_BPL_rel, 	// 0x10
 do_ORA_indY, 	// 0x11
@@ -6226,7 +6443,7 @@ do_NOP_impl, 	// 0x12
 do_NOP_impl, 	// 0x13
 do_NOP_impl, 	// 0x14
 do_ORA_zpgX, 	// 0x15
-do_NOP_impl, 	// 0x16
+do_ASL_zpgX, 	// 0x16
 do_NOP_impl, 	// 0x17
 do_CLC_impl, 	// 0x18
 do_ORA_absY, 	// 0x19
@@ -6234,7 +6451,7 @@ do_NOP_impl, 	// 0x1A
 do_NOP_impl, 	// 0x1B
 do_NOP_impl, 	// 0x1C
 do_ORA_absX, 	// 0x1D
-do_NOP_impl, 	// 0x1E
+do_ASL_absX, 	// 0x1E
 do_NOP_impl, 	// 0x1F
 do_JSR_abs, 	// 0x20
 do_AND_Xind, 	// 0x21
