@@ -800,8 +800,8 @@ int do_ASL_A(CPU *cpu)
 int do_ASL_abs(CPU *cpu)
 // Arithmetic shift left absolute addressing
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	int nbytes = 3;
+	int ncycles = 6;
 
 	log_op_start(cpu, "ASL abs", nbytes);
 
@@ -837,7 +837,7 @@ int do_ASL_abs(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, M, ncycles);
 
 	return ncycles;
 }
@@ -893,7 +893,7 @@ int do_ASL_absX(CPU *cpu)
 	// Cycle 6: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, M, ncycles);
 
 	return ncycles;
 }
@@ -934,7 +934,7 @@ int do_ASL_zpg(CPU *cpu)
 	// Cycle 4: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, M, ncycles);
 
 	return ncycles;
 }
@@ -978,7 +978,7 @@ int do_ASL_zpgX(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, M, ncycles);
 
 	return ncycles;
 }
@@ -4130,7 +4130,7 @@ int do_LSR_abs(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, M, ncycles);
 
 	return ncycles;
 }
@@ -4187,7 +4187,7 @@ int do_LSR_absX(CPU *cpu)
 	// Cycle 6: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, M, ncycles);
 
 	return ncycles;
 }
@@ -4229,7 +4229,7 @@ int do_LSR_zpg(CPU *cpu)
 	// Cycle 4: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, M, ncycles);
 
 	return ncycles;
 }
@@ -4274,7 +4274,7 @@ int do_LSR_zpgX(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, M, ncycles);
 
 	return ncycles;
 }
@@ -4293,6 +4293,238 @@ int do_NOP_impl(CPU *cpu)
 	// Cycle 1: Do nothing
 	
 	log_op_end(cpu, 0, ncycles);
+
+	return ncycles;
+}
+
+int do_ROL_A(CPU *cpu)
+// Rotate left accumulator
+{
+	int nbytes = 1;
+	int ncycles = 2;
+
+	log_op_start(cpu, "ROL A ", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: Save current carry state, copy bit 7 (N) to carry,
+	// 	shift left, and put carry in bit 0
+	int og_carry = cpu->SR & C;
+	if ((cpu->A & N) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	cpu->A <<= 1;
+	cpu->A |= og_carry;
+
+	//   Set N,Z if necessary
+	set_N(cpu, cpu->A);
+	set_Z(cpu, cpu->A);
+
+	log_op_end(cpu, cpu->A, ncycles);
+
+	return ncycles;
+}
+
+int do_ROL_abs(CPU *cpu)
+// Rotate left absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 6;
+
+	log_op_start(cpu, "ROL abs", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of address, incement PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of address, increment PC
+	addr = addr + (read(*cpu->bus, cpu->PC) << 8);
+	cpu->PC++;
+
+	// Cycle 3: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 4: Save current carry state, copy bit 7 (N) to carry,
+	// 	shift left, and put carry in bit 0
+	int og_carry = cpu->SR & C;
+	if ((M & N) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	M <<= 1;
+	M |= og_carry;
+
+	//   Set N,Z if necessary
+	set_N(cpu, M);
+	set_Z(cpu, M);
+
+	// Cycle 5: Store back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, M, ncycles);
+
+	return ncycles;
+}
+
+int do_ROL_absX(CPU *cpu)
+// Rotate left x-indexed absolute addressing
+{
+	int nbytes = 3;
+	int ncycles = 7;
+
+	log_op_start(cpu, "ROL absX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch low byte of base address, incement PC
+	// 	use two bytes for bal so we can catch the carry
+	word bal = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2:  fetch high byte of base address, add X to low byte
+	// 	increment PC
+	byte bah = read(*cpu->bus, cpu->PC);
+	bal = bal + cpu->X;
+	cpu->PC++;
+
+	// Cycle 3:  add carry to high byte if necessary
+	if (bal > 255)
+	{
+		bah = bah + 1;
+		bal = bal & 0xFF;	// Trim off carry bit
+	}
+
+	// Cycle 4: fetch byte
+	word addr = (bah << 8) + bal;
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 5: Save current carry state, copy bit 7 (N) to carry,
+	// 	shift left, and put carry in bit 0
+	int og_carry = cpu->SR & C;
+	if ((M & N) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	M <<= 1;
+	M |= og_carry;
+
+	//   Set N,Z if necessary
+	set_N(cpu, M);
+	set_Z(cpu, M);
+
+	// Cycle 6: Store back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, M, ncycles);
+
+	return ncycles;
+}
+
+int do_ROL_zpg(CPU *cpu)
+// Rotate left zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 5;
+
+	log_op_start(cpu, "ROL zpg", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address and increment PC
+	word addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 3: Save current carry state, copy bit 7 (N) to carry,
+	// 	shift left, and put carry in bit 0
+	int og_carry = cpu->SR & C;
+	if ((M & N) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	M <<= 1;
+	M |= og_carry;
+
+	//   Set N,Z if necessary
+	set_N(cpu, M);
+	set_Z(cpu, M);
+
+	// Cycle 4: Store back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, M, ncycles);
+
+	return ncycles;
+}
+
+int do_ROL_zpgX(CPU *cpu)
+// Rotate left x-indexed zero page addressing
+{
+	int nbytes = 2;
+	int ncycles = 6;
+
+	log_op_start(cpu, "ROL zpgX", nbytes);
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
+	
+	// Cycle 1: fetch zpg address, incement PC
+	byte addr = read(*cpu->bus, cpu->PC);
+	cpu->PC++;
+
+	// Cycle 2: Add X to address
+	addr = addr + cpu->X;
+
+	// Cycle 3: fetch byte
+	byte M = read(*cpu->bus, addr);
+
+	// Cycle 4: Save current carry state, copy bit 7 (N) to carry,
+	// 	shift left, and put carry in bit 0
+	int og_carry = cpu->SR & C;
+	if ((M & N) == 0)
+	{
+		cpu->SR &= ~C;
+	}
+	else
+	{
+		cpu->SR |= C;
+	}
+	M <<= 1;
+	M |= og_carry;
+
+	//   Set N,Z if necessary
+	set_N(cpu, M);
+	set_Z(cpu, M);
+
+	// Cycle 5: Store back in memory
+	write(*cpu->bus, addr, M);
+
+	log_op_end(cpu, M, ncycles);
 
 	return ncycles;
 }
@@ -6681,15 +6913,15 @@ do_NOP_impl, 	// 0x22
 do_NOP_impl, 	// 0x23
 do_BIT_zpg, 	// 0x24
 do_AND_zpg, 	// 0x25
-do_NOP_impl, 	// 0x26
+do_ROL_zpg, 	// 0x26
 do_NOP_impl, 	// 0x27
 do_NOP_impl, 	// 0x28
 do_AND_imm, 	// 0x29
-do_NOP_impl, 	// 0x2A
+do_ROL_A,	 	// 0x2A
 do_NOP_impl, 	// 0x2B
 do_BIT_abs, 	// 0x2C
 do_AND_abs, 	// 0x2D
-do_NOP_impl, 	// 0x2E
+do_ROL_abs, 	// 0x2E
 do_NOP_impl, 	// 0x2F
 do_BMI_rel, 	// 0x30
 do_AND_indY, 	// 0x31
@@ -6697,7 +6929,7 @@ do_NOP_impl, 	// 0x32
 do_NOP_impl, 	// 0x33
 do_NOP_impl, 	// 0x34
 do_AND_zpgX, 	// 0x35
-do_NOP_impl, 	// 0x36
+do_ROL_zpgX, 	// 0x36
 do_NOP_impl, 	// 0x37
 do_SEC_impl, 	// 0x38
 do_AND_absY, 	// 0x39
@@ -6705,7 +6937,7 @@ do_NOP_impl, 	// 0x3A
 do_NOP_impl, 	// 0x3B
 do_NOP_impl, 	// 0x3C
 do_AND_absX, 	// 0x3D
-do_NOP_impl, 	// 0x3E
+do_ROL_absX, 	// 0x3E
 do_NOP_impl, 	// 0x3F
 do_RTI_impl, 	// 0x40
 do_EOR_Xind, 	// 0x41
