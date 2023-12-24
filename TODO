@@ -1,5 +1,3 @@
-Instructions to add:
-
 run BCD test program
 16-bit addition
 multiplication
@@ -27,14 +25,13 @@ zpg,X indirect
 zpg indirect,Y
 
 em6502 options:
-c, code-base: page where code starts, default = 0x80
+c, code-base: page where code starts, default = 0x06
 d, data-base: page where data starts, default = 0x02
 
 p, program-file: code file, default = code.bin
 i, input-file: data file, default = data.bin
 o, output-file: data output file, default = out.bin
 
-B, enable-break: BRK issues interrupt, NOP terminates
 C, code-pages: pages of code to print, default = 1
 D, data-pages: pages of data to print (at end of run), default = 1
 S, print-stack: print stack (1, default) or not (0)
@@ -42,7 +39,6 @@ Z, print-zero-page: print zero page (1, default) or not (0)
 
 bkn6502 options:
 p, program-file: code file, default = code.bin
-i, input-file: data file, default = data.bin
 o, output-file: data output file, default = out.bin
 
 c, code-size: number of pages in code file (default = 128/0x80)
@@ -53,12 +49,12 @@ c, code-size: number of pages in code file (default = 128/0x80)
 
 OP Codes:
 **ADC
-AND
-ASL
+**AND
+**ASL
 **BCC
 **BCS
 **BEQ
-BIT
+**BIT
 **BMI
 **BNE
 **BPL
@@ -75,7 +71,7 @@ BIT
 **DEC
 **DEX
 **DEY
-EOR
+**EOR
 **INC
 **INX
 **INY
@@ -84,15 +80,15 @@ EOR
 **LDA
 **LDX
 **LDY
-LSR
+**LSR
 **NOP
 **ORA
 **PHA
 **PHP
 **PLA
 **PLP
-ROL
-ROR
+**ROL
+**ROR
 **RTI
 **RTS
 **SBC

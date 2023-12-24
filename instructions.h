@@ -75,6 +75,7 @@ int do_ADC_Xind(CPU *cpu);	// 0x61
 int do_ADC_zpg(CPU *cpu);	// 0x65
 int do_PLA_impl(CPU *cpu);	// 0x68
 int do_ADC_imm(CPU *cpu);	// 0x69
+int do_ROR_A(CPU *cpu);		// 0x6A
 int do_JMP_ind(CPU *cpu);	// 0x6C
 int do_ADC_abs(CPU *cpu);	// 0x6D
 int do_BVS_rel(CPU *cpu);	// 0x70

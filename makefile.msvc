@@ -2,7 +2,7 @@
 CC = cl
 LD = link
 
-COPTS = /Zi /MDd /W4
+COPTS = /Zi /MDd /W4 /wd4244
 LOPTS = /DEBUG
 
 INCDIR = ..\msvc\include
