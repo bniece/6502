@@ -1,0 +1,12 @@
+This book has the somewhat odd convention of putting programs in the zero page starting at 0x0000.
+	Emulator must be run with em6502 -c 0 to place code at the beginning.
+	
+
+Programs are named as follows:
+
+xx-yyy-description
+
+Where:
+	xx = chapter
+	yyy = page
+	description = example title

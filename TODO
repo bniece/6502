@@ -25,8 +25,8 @@ zpg,X indirect
 zpg indirect,Y
 
 em6502 options:
-c, code-base: page where code starts, default = 0x06
-d, data-base: page where data starts, default = 0x02
+c, code-base: address where code starts, default = 0x06
+d, data-base: address where data starts, default = 0x02
 
 p, program-file: code file, default = code.bin
 i, input-file: data file, default = data.bin

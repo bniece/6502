@@ -1,0 +1,9 @@
+* = 0
+data = $40
+
+LDA $40
+CMP $41
+BCS STRES
+LDA $41
+STRES STA $42
+BRK

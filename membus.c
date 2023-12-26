@@ -79,7 +79,6 @@ int import_mem(char *filename, membus *bus, word addr)
 	FILE *file = fopen(filename, "rb");
 	if (file == NULL)
 	{
-		printf("Error opening file %s\n", filename);
 		return -1;
 	}
 
@@ -92,7 +91,6 @@ int import_mem(char *filename, membus *bus, word addr)
 	readbytes = fread(&bus->mem[addr], sizeof(byte), filebytes, file);
 	if (readbytes != filebytes)
 	{
-		printf("Error reading file %s\n", filename);
 		return -2;
 	}
 

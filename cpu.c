@@ -105,6 +105,7 @@ void set_C(CPU *cpu, int result)
 void print_registers(CPU *cpu)
 // List contents of CPU on stdout
 {
+	printf("\n");
 	printf("6502 CPU Status:\n");
 	printf("PC: 0x%04X\n", cpu->PC);
 	printf("SP: 0x%02X\n", cpu->SP);

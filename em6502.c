@@ -16,7 +16,8 @@
 int main(int argc, char *argv[])
 {
    int c, opt_idx = 0;	// getopt variables
-								//
+	int r;					// memory operation result
+
 	// Track performance
 	int cycleCount = 0;
 
@@ -32,11 +33,12 @@ int main(int argc, char *argv[])
    struct option long_opts[] = 
    {
       {"version", no_argument, 0, 'v'},
-      {"enable-break", required_argument, 0, 'B'},
+      {"code-base", required_argument, 0, 'c'},
+		{"data-base", required_argument, 0, 'd'},
       {0, 0, 0, 0}
    };
 
-   while ((c = getopt_long(argc, argv, "vB", long_opts, &opt_idx)) != -1)
+   while ((c = getopt_long(argc, argv, "vc:d:", long_opts, &opt_idx)) != -1)
       switch (c)
       {
 	 case 'v':
@@ -45,8 +47,15 @@ int main(int argc, char *argv[])
 	    printf("Built %s\n", __DATE__);
 	    return 0;
 	    break;
-	 case 'B':
-		 printf("Fully implemented BRK -- use NOP to end program\n\n");
+	 case 'c':
+		 int code_in;
+		 sscanf(optarg, "%x", &code_in);
+		 code = code_in;
+	    break;
+	 case 'd':
+		 int data_in;
+		 sscanf(optarg, "%x", &data_in);
+		 data = data_in;
 	    break;
       }
 
@@ -56,17 +65,51 @@ int main(int argc, char *argv[])
 	initialize_bus(&bus);
 	initialize_cpu(&cpu, &bus);
 
-	// Load code and data, bail out on error
-	// 		(Data not currently implemented)
-	if (import_mem("code.bin", &bus, code) != 0)
+	// Load code, bail out on error
+	r = import_mem("code.bin", &bus, code);
+	switch (r)
 	{
-		return -1;
+		case 0:
+			printf("Loading code.bin at 0x%04x\n", code);
+			break;
+		case -1:
+			printf("Error opening code file: code.bin\n");
+			return -1;
+			break;
+		case -2:
+			printf("Error reading code file: code.bin\n");
+			return -1;
+			break;
+		default:
+			printf("Code file error\n");
+			return -1;
+			break;
 	}
 
-	// Set default code location here so reset can find it.
+	// Load data if found
+	r = import_mem("data.bin", &bus, data);
+	switch (r)
+	{
+		case 0:
+			printf("Loading data.bin at 0x%04x\n", data);
+			break;
+		case -1:
+			printf("No data file found\n");
+			break;
+		case -2:
+			printf("Error reading data file: data.bin\n");
+			return -1;
+			break;
+		default:
+			printf("Data file error\n");
+			return -1;
+			break;
+	}
+
+	// Set code location here so reset can find it.
 	// A full 64k ROM would presumably provide this.
-	write(bus, 0xFFFC, DEF_CODE_ADDR & 0xFF);
-	write(bus, 0xFFFD, DEF_CODE_ADDR >> 8);
+	write(bus, 0xFFFC, code & 0xFF);
+	write(bus, 0xFFFD, code >> 8);
 
 	// Write protect the reset/irq vectors
 	// 	Note, the code isn't protected, so self-modifying code is possible
