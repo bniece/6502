@@ -7336,7 +7336,7 @@ do_NOP_impl, 	// 0xE2
 do_NOP_impl, 	// 0xE3
 do_CPX_zpg, 	// 0xE4
 do_SBC_zpg, 	// 0xE5
-do_NOP_impl, 	// 0xE6
+do_INC_zpg, 	// 0xE6
 do_NOP_impl, 	// 0xE7
 do_INX_impl, 	// 0xE8
 do_SBC_imm, 	// 0xE9
@@ -7344,7 +7344,7 @@ do_NOP_impl, 	// 0xEA
 do_NOP_impl, 	// 0xEB
 do_CPX_abs, 	// 0xEC
 do_SBC_abs, 	// 0xED
-do_NOP_impl, 	// 0xEE
+do_INC_abs, 	// 0xEE
 do_NOP_impl, 	// 0xEF
 do_BEQ_rel, 	// 0xF0
 do_SBC_indY, 	// 0xF1
@@ -7352,7 +7352,7 @@ do_NOP_impl, 	// 0xF2
 do_NOP_impl, 	// 0xF3
 do_NOP_impl, 	// 0xF4
 do_ADC_zpgX, 	// 0xF5
-do_NOP_impl, 	// 0xF6
+do_INC_zpgX, 	// 0xF6
 do_NOP_impl, 	// 0xF7
 do_SED_impl, 	// 0xF8
 do_SBC_absY, 	// 0xF9
@@ -7360,7 +7360,7 @@ do_NOP_impl, 	// 0xFA
 do_NOP_impl, 	// 0xFB
 do_NOP_impl, 	// 0xFC
 do_SBC_absX, 	// 0xFD
-do_NOP_impl, 	// 0xFE
+do_INC_absX, 	// 0xFE
 do_NOP_impl  	// 0xFF
 };
 
