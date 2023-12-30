@@ -6,7 +6,6 @@
 
 #include <getopt.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "em6502.h"
 #include "cpu.h"
@@ -19,13 +18,17 @@ int main(int argc, char *argv[])
 	int r;					// memory operation result
 
 	// Track performance
-	int cycleCount = 0;
+	int cycle_count = 0;
 
 	// Addresses of memory segments for quick reference
 	word zero_page = 0x00;
 	word stack = 0x100;
 	word data = DEF_DATA_ADDR;
 	word code = DEF_CODE_ADDR;
+
+	// Default file names
+	char *code_file = "code.bin";
+	char *data_file = "data.bin";
 
    // Parse and handle any options
    opterr = 0;
@@ -35,10 +38,12 @@ int main(int argc, char *argv[])
       {"version", no_argument, 0, 'v'},
       {"code-base", required_argument, 0, 'c'},
 		{"data-base", required_argument, 0, 'd'},
+		{"program-file", required_argument, 0, 'p'},
+		{"input-file", required_argument, 0, 'i'},
       {0, 0, 0, 0}
    };
 
-   while ((c = getopt_long(argc, argv, "vc:d:", long_opts, &opt_idx)) != -1)
+   while ((c = getopt_long(argc, argv, "vc:d:p:i:", long_opts, &opt_idx)) != -1)
       switch (c)
       {
 	 case 'v':
@@ -57,6 +62,12 @@ int main(int argc, char *argv[])
 		 sscanf(optarg, "%x", &data_in);
 		 data = data_in;
 	    break;
+	 case 'p':
+		 code_file = optarg;
+		 break;
+	 case 'i':
+		 data_file = optarg;
+		 break;
       }
 
 	// Create processor and memory
@@ -66,18 +77,18 @@ int main(int argc, char *argv[])
 	initialize_cpu(&cpu, &bus);
 
 	// Load code, bail out on error
-	r = import_mem("code.bin", &bus, code);
+	r = import_mem(code_file, &bus, code);
 	switch (r)
 	{
 		case 0:
-			printf("Loading code.bin at 0x%04x\n", code);
+			printf("Loading %s at 0x%04x\n", code_file, code);
 			break;
 		case -1:
-			printf("Error opening code file: code.bin\n");
+			printf("Error opening code file: %s\n", code_file);
 			return -1;
 			break;
 		case -2:
-			printf("Error reading code file: code.bin\n");
+			printf("Error reading code file: %s\n", code_file);
 			return -1;
 			break;
 		default:
@@ -87,17 +98,17 @@ int main(int argc, char *argv[])
 	}
 
 	// Load data if found
-	r = import_mem("data.bin", &bus, data);
+	r = import_mem(data_file, &bus, data);
 	switch (r)
 	{
 		case 0:
-			printf("Loading data.bin at 0x%04x\n", data);
+			printf("Loading %s at 0x%04x\n", data_file, data);
 			break;
 		case -1:
 			printf("No data file found\n");
 			break;
 		case -2:
-			printf("Error reading data file: data.bin\n");
+			printf("Error reading data file: %s\n", data_file);
 			return -1;
 			break;
 		default:
@@ -129,7 +140,7 @@ int main(int argc, char *argv[])
 	do 
 	{
 		cpu.IR = read(bus, cpu.PC);
-		cycleCount += execute[cpu.IR](&cpu);
+		cycle_count += execute[cpu.IR](&cpu);
 
 		// Execute peripheral code here
 		
@@ -146,7 +157,7 @@ int main(int argc, char *argv[])
 	print_mem_page(&bus, stack, cpu.SP);
 	printf("\nData:\n");
 	print_mem_page(&bus, data, -1);
-	printf("\nCycles: %d\n", cycleCount);
+	printf("\nCycles: %d\n", cycle_count);
 
    return 0;
 }
