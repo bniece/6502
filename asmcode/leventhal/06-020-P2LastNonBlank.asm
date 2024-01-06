@@ -1,0 +1,15 @@
+* = $00
+data = $40
+
+LDX #$FF	; Index
+CHKSP:
+STX $40
+SPACE:
+INX
+LDA $42,X
+CMP #$20
+BEQ SPACE
+CHKCR:
+CMP #$0D
+BNE CHKSP
+BRK
