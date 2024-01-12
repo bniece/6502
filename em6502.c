@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
 	// Default file names
 	char *code_file = "code.bin";
 	char *data_file = "data.bin";
+	char *out_file = "out.bin";
 
    // Parse and handle any options
    opterr = 0;
@@ -40,10 +41,11 @@ int main(int argc, char *argv[])
 		{"data-base", required_argument, 0, 'd'},
 		{"program-file", required_argument, 0, 'p'},
 		{"input-file", required_argument, 0, 'i'},
+		{"output-file", required_argument, 0, '0'},
       {0, 0, 0, 0}
    };
 
-   while ((c = getopt_long(argc, argv, "vc:d:p:i:", long_opts, &opt_idx)) != -1)
+   while ((c = getopt_long(argc, argv, "vc:d:p:i:o:", long_opts, &opt_idx)) != -1)
       switch (c)
       {
 	 case 'v':
@@ -67,6 +69,9 @@ int main(int argc, char *argv[])
 		 break;
 	 case 'i':
 		 data_file = optarg;
+		 break;
+	 case 'o':
+		 out_file = optarg;
 		 break;
       }
 
@@ -158,6 +163,28 @@ int main(int argc, char *argv[])
 	printf("\nData:\n");
 	print_mem_page(&bus, data, -1);
 	printf("\nCycles: %d\n", cycle_count);
+
+	// Save data (currently only one page)
+	r = export_mem(out_file, &bus, data, 1);
+	switch (r)
+	{
+		case 0:
+			printf("Saving 0x%04x in %s\n", data, out_file);
+			break;
+		case -1:
+			printf("Error opening output file: %s\n", out_file);
+			return -1;
+			break;
+		case -2:
+			printf("Error writing output file: %s\n", out_file);
+			return -1;
+			break;
+		default:
+			printf("Output file error\n");
+			return -1;
+			break;
+	}
+
 
    return 0;
 }

@@ -94,6 +94,33 @@ int import_mem(char *filename, membus *bus, word addr)
 		return -2;
 	}
 
+	fclose(file);
+
+	return 0;
+}
+
+int export_mem(char *filename, membus *bus, word addr, int npages)
+// Write npages of data at specified addres to binary file
+// 	This is an emulator function, so it doesn't need to go through the CPU
+{
+	int writebytes;
+
+	// Open file
+	FILE *file = fopen(filename, "wb");
+	if (file == NULL)
+	{
+		return -1;
+	}
+
+	// Write data to file
+	writebytes = fwrite(&bus->mem[addr], sizeof(byte), npages * 256, file);
+	if (writebytes != npages * 256)
+	{
+		return -2;
+	}
+
+	fclose(file);
+
 	return 0;
 }
 
