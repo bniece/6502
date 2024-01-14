@@ -6,6 +6,7 @@
 
 #include <getopt.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "em6502.h"
 #include "cpu.h"
@@ -31,6 +32,12 @@ int main(int argc, char *argv[])
 	char *data_file = "data.bin";
 	char *out_file = "out.bin";
 
+	// Output parameters
+	int code_pages = 1;
+	int data_pages = 1;
+	int print_stack = 1;
+	int print_zpg = 1;
+
    // Parse and handle any options
    opterr = 0;
 
@@ -42,10 +49,14 @@ int main(int argc, char *argv[])
 		{"program-file", required_argument, 0, 'p'},
 		{"input-file", required_argument, 0, 'i'},
 		{"output-file", required_argument, 0, '0'},
+		{"code-pages", required_argument, 0, 'C'},
+		{"data-pages", required_argument, 0, 'D'},
+		{"print-stack", required_argument, 0, 'S'},
+		{"print-zero-page", required_argument, 0, 'Z'},
       {0, 0, 0, 0}
    };
 
-   while ((c = getopt_long(argc, argv, "vc:d:p:i:o:", long_opts, &opt_idx)) != -1)
+   while ((c = getopt_long(argc, argv, "vc:d:p:i:o:C:D:S:Z:", long_opts, &opt_idx)) != -1)
       switch (c)
       {
 	 case 'v':
@@ -72,6 +83,18 @@ int main(int argc, char *argv[])
 		 break;
 	 case 'o':
 		 out_file = optarg;
+		 break;
+	 case 'C':
+		 code_pages = atoi(optarg);
+		 break;
+	 case 'D':
+		 data_pages = atoi(optarg);
+		 break;
+	 case 'S':
+		 print_stack = atoi(optarg);
+		 break;
+	 case 'Z':
+		 print_zpg = atoi(optarg);
 		 break;
       }
 
@@ -136,12 +159,20 @@ int main(int argc, char *argv[])
 	// "Boot"
 	reset(&cpu);
 
-	// Print current status & code
+	// Print current status & requested code pages
 	print_registers(&cpu);
-	printf("\nCode:\n");
-	print_mem_page(&bus, code, -1);
 
-	// Read from the code segment until out of instructions
+	if (code_pages > 0)
+	{
+		printf("\nCode:\n");
+		for (int i = 0; i < code_pages; i++)
+		{
+			print_mem_page(&bus, code + i*0x100, -1);
+		}
+	}
+
+	// Read & execute from the code segment until out of instructions
+	printf("\nExecuting . . . \n");
 	do 
 	{
 		cpu.IR = read(bus, cpu.PC);
@@ -154,37 +185,53 @@ int main(int argc, char *argv[])
 	} while (cpu.IR != 0x00);
 
 
-	// Print new status, stack, memory, cycles used
+	// Print new status
 	print_registers(&cpu);
-	printf("\nZero Page:\n");
-	print_mem_page(&bus, zero_page, -1);
-	printf("\nStack:\n");
-	print_mem_page(&bus, stack, cpu.SP);
-	printf("\nData:\n");
-	print_mem_page(&bus, data, -1);
-	printf("\nCycles: %d\n", cycle_count);
 
-	// Save data (currently only one page)
-	r = export_mem(out_file, &bus, data, 1);
-	switch (r)
+	// Print zero page and stack if requested
+	if (print_zpg == 1)
 	{
-		case 0:
-			printf("Saving 0x%04x in %s\n", data, out_file);
-			break;
-		case -1:
-			printf("Error opening output file: %s\n", out_file);
-			return -1;
-			break;
-		case -2:
-			printf("Error writing output file: %s\n", out_file);
-			return -1;
-			break;
-		default:
-			printf("Output file error\n");
-			return -1;
-			break;
+		printf("\nZero Page:\n");
+		print_mem_page(&bus, zero_page, -1);
 	}
 
+	if (print_stack == 1)
+	{
+		printf("\nStack:\n");
+		print_mem_page(&bus, stack, cpu.SP);
+	}
+
+	// Print and save requested data pages
+	if (data_pages > 0)
+	{
+		printf("\nData:\n");
+		for (int i = 0; i < data_pages; i++)
+		{
+			print_mem_page(&bus, data + i*0x100, -1);
+		}
+		r = export_mem(out_file, &bus, data, data_pages);
+		switch (r)
+		{
+			case 0:
+				printf("Saving 0x%04x in %s\n", data, out_file);
+				break;
+			case -1:
+				printf("Error opening output file: %s\n", out_file);
+				return -1;
+				break;
+			case -2:
+				printf("Error writing output file: %s\n", out_file);
+				return -1;
+				break;
+			default:
+				printf("Output file error\n");
+				return -1;
+				break;
+		}
+	}
+
+	// print cycles used
+	printf("\nCycles: %d\n", cycle_count);
 
    return 0;
 }
