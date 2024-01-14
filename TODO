@@ -10,7 +10,7 @@ Simple TTY I/O -- interrupt on keypress, write to buffer for output
 "video" I/O
 Simulated 7-segment display
 
-Documentation
+Documentation, help option
 
 addressing mode order:
 imm
