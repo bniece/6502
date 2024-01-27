@@ -1092,7 +1092,7 @@ int do_BCS_rel(CPU *cpu)
 }
 
 int do_BEQ_rel(CPU *cpu)
-// Branch on result equal t0 zero
+// Branch on result equal to zero
 {
 	int nbytes = 2;
 	int ncycles = 2;
@@ -2168,8 +2168,8 @@ int do_DEC_abs(CPU *cpu)
 	// 	set N,Z if necessary
 	M--;
 
-	set_N(cpu, cpu->X);
-	set_Z(cpu, cpu->X);
+	set_N(cpu, M);
+	set_Z(cpu, M);
 
 	// Cycle 5: Store byte back in memory
 	write(*cpu->bus, addr, M);
@@ -2216,8 +2216,8 @@ int do_DEC_absX(CPU *cpu)
 	// 	set N,Z if necessary
 	M--;
 
-	set_N(cpu, cpu->X);
-	set_Z(cpu, cpu->X);
+	set_N(cpu, M);
+	set_Z(cpu, M);
 
 	// Cycle 6: Store byte back in memory
 	write(*cpu->bus, addr, M);
@@ -2249,8 +2249,8 @@ int do_DEC_zpg(CPU *cpu)
 	// 	set N,Z if necessary
 	M--;
 
-	set_N(cpu, cpu->X);
-	set_Z(cpu, cpu->X);
+	set_N(cpu, M);
+	set_Z(cpu, M);
 
 	// Cycle 4: Store byte back in memory
 	write(*cpu->bus, addr, M);
@@ -2285,8 +2285,8 @@ int do_DEC_zpgX(CPU *cpu)
 	// 	set N,Z if necessary
 	M--;
 
-	set_N(cpu, cpu->X);
-	set_Z(cpu, cpu->X);
+	set_N(cpu, M);
+	set_Z(cpu, M);
 
 	// Cycle 5: Store byte back in memory
 	write(*cpu->bus, addr, M);
@@ -2677,8 +2677,8 @@ int do_INC_abs(CPU *cpu)
 	// 	set N,Z if necessary
 	M++;
 
-	set_N(cpu, cpu->X);
-	set_Z(cpu, cpu->X);
+	set_N(cpu, M);
+	set_Z(cpu, M);
 
 	// Cycle 5: Store byte back in memory
 	write(*cpu->bus, addr, M);
@@ -2725,8 +2725,8 @@ int do_INC_absX(CPU *cpu)
 	// 	set N,Z if necessary
 	M++;
 
-	set_N(cpu, cpu->X);
-	set_Z(cpu, cpu->X);
+	set_N(cpu, M);
+	set_Z(cpu, M);
 
 	// Cycle 6: Store byte back in memory
 	write(*cpu->bus, addr, M);
@@ -2758,8 +2758,8 @@ int do_INC_zpg(CPU *cpu)
 	// 	set N,Z if necessary
 	M++;
 
-	set_N(cpu, cpu->X);
-	set_Z(cpu, cpu->X);
+	set_N(cpu, M);
+	set_Z(cpu, M);
 
 	// Cycle 4: Store byte back in memory
 	write(*cpu->bus, addr, M);
@@ -2794,8 +2794,8 @@ int do_INC_zpgX(CPU *cpu)
 	// 	set N,Z if necessary
 	M++;
 
-	set_N(cpu, cpu->X);
-	set_Z(cpu, cpu->X);
+	set_N(cpu, M);
+	set_Z(cpu, M);
 
 	// Cycle 5: Store byte back in memory
 	write(*cpu->bus, addr, M);
@@ -7370,7 +7370,7 @@ int do_CLD_impl(CPU *cpu)
 	int nbytes = 1;
 	int ncycles = 2;
 
-	log_op_start(cpu, "CLC   ", nbytes);
+	log_op_start(cpu, "CLD   ", nbytes);
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
