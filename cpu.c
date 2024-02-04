@@ -12,10 +12,13 @@
 #include "membus.h"
 
 void initialize_cpu(CPU *cpu, membus *bus)
-// Link the processor to the memory bus so it can access data
-// 	and peripherals
 {
+	// Link the processor to the memory bus so it can access data
+	// 	and peripherals
 	cpu->bus = bus;
+
+	// Set bit 5 of the status register because it is always 1
+	cpu->SR = cpu->SR | 32;
 }
 
 void reset(CPU *cpu)
@@ -109,8 +112,8 @@ void print_registers(CPU *cpu)
 	printf("6502 CPU Status:\n");
 	printf("PC: 0x%04X\n", cpu->PC);
 	printf("SP: 0x%02X\n", cpu->SP);
-	printf("N V B D I Z C\n");
-	printf("%d %d %d %d %d %d %d\n", 
+	printf("N V - B D I Z C\n");
+	printf("%d %d 1 %d %d %d %d %d\n", 
 			(cpu->SR & N)/N, (cpu->SR & V)/V, (cpu->SR & B)/B, 
 			(cpu->SR & D)/D, (cpu->SR & I)/I, (cpu->SR & Z)/Z, 
 			(cpu->SR & C)/C);
