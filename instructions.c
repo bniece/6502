@@ -5753,6 +5753,7 @@ int do_TYA_impl(CPU *cpu)
 int do_ADC_imm_BCD(CPU *cpu)
 // Add with Carry, immediate addressing - BCD mode
 // 	A, C = A + M + C
+// 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
 	int nbytes = 2;
 	int ncycles = 2;
@@ -5770,50 +5771,48 @@ int do_ADC_imm_BCD(CPU *cpu)
 	byte old_A = cpu->A;
 	byte old_C = (cpu->SR & C)?1:0;
 
-	// 	Do the addition and update C
-	int rl, rh, tc; 	// result low byte, high byte, temp carry flag
-	rl = (cpu->A & 0x0F) + (M & 0x0F) + ((cpu->SR & C)?1:0);
-	if (rl > 9)
+	// 	Do the addition
+	int AL = (old_A & 0x0F) + (M & 0x0F) + old_C;
+	if (AL >= 0x0A)
 	{
-		rl = rl - 10;
-		tc = 1;
+		AL = ((AL + 0x06) & 0x0F) + 0x10;
 	}
-	else
-	{
-		tc = 0;
-	}
-	rh = (cpu->A>>4) + (M>>4) + tc;
-	if (rh > 9)
-	{
-		rh = rh - 10;
-		tc = 1;
-	}
-	else
-	{
-		tc = 0;
-	}
+	int new_A = (old_A & 0xF0) + (M & 0xF0) + AL;
 
-	int result = rl + (rh<<4);
-
-	// Set the actual carry bit based on the placeholder
-	if (tc == 0)
+	// Set N,V at this point
+	set_N(cpu, new_A);
+	if ((new_A < -128) || (new_A > 127))
 	{
-		cpu->SR &= ~C;
+		cpu->SR |= V;
 	}
 	else
 	{
-		cpu->SR |= C;
+		cpu->SR &= ~V;
+	}
+	// then continue
+
+	if (new_A >= 0xA0)
+	{
+		new_A = new_A + 0x60;
 	}
 
 	// 	Store in A
-	cpu->A = result;
+	cpu->A = new_A & 0xFF;
 
-	// 	Redo the math in true binary and set N,V,Z if necessary
+	// Set the carry bit
+	if (new_A >= 0x100)
+	{
+		cpu->SR |= C;
+	}
+	else
+	{
+		cpu->SR &= ~C;
+	}
+
+	// 	Redo the math in true binary and set Z
 	// 		This logic may not be right.  Check.
-	result = old_A + M + old_C;
-	set_N(cpu, result);
-	set_V(cpu, cpu->A, M, result);
-	set_Z(cpu, result);
+	new_A = old_A + M + old_C;
+	set_Z(cpu, new_A);
 
 	log_op_end(cpu, cpu->A, ncycles);
 
@@ -6110,50 +6109,48 @@ int do_ADC_zpg_BCD(CPU *cpu)
 	byte old_A = cpu->A;
 	byte old_C = (cpu->SR & C)?1:0;
 
-	// 	Do the addition and update C
-	int rl, rh, tc; 	// result low byte, high byte, temp carry flag
-	rl = (cpu->A & 0x0F) + (M & 0x0F) + ((cpu->SR & C)?1:0);
-	if (rl > 9)
+	// 	Do the addition
+	int AL = (old_A & 0x0F) + (M & 0x0F) + old_C;
+	if (AL >= 0x0A)
 	{
-		rl = rl - 10;
-		tc = 1;
+		AL = ((AL + 0x06) & 0x0F) + 0x10;
 	}
-	else
-	{
-		tc = 0;
-	}
-	rh = (cpu->A>>4) + (M>>4) + tc;
-	if (rh > 9)
-	{
-		rh = rh - 10;
-		tc = 1;
-	}
-	else
-	{
-		tc = 0;
-	}
+	int new_A = (old_A & 0xF0) + (M & 0xF0) + AL;
 
-	int result = rl + (rh<<4);
-
-	// Set the actual carry bit based on the placeholder
-	if (tc == 0)
+	// Set N,V at this point
+	set_N(cpu, new_A);
+	if ((new_A < -128) || (new_A > 127))
 	{
-		cpu->SR &= ~C;
+		cpu->SR |= V;
 	}
 	else
 	{
-		cpu->SR |= C;
+		cpu->SR &= ~V;
+	}
+	// then continue
+
+	if (new_A >= 0xA0)
+	{
+		new_A = new_A + 0x60;
 	}
 
 	// 	Store in A
-	cpu->A = result;
+	cpu->A = new_A & 0xFF;
 
-	// 	Redo the math in true binary and set N,V,Z if necessary
+	// Set the carry bit
+	if (new_A >= 0x100)
+	{
+		cpu->SR |= C;
+	}
+	else
+	{
+		cpu->SR &= ~C;
+	}
+
+	// 	Redo the math in true binary and set Z
 	// 		This logic may not be right.  Check.
-	result = old_A + M + old_C;
-	set_N(cpu, result);
-	set_V(cpu, cpu->A, M, result);
-	set_Z(cpu, result);
+	new_A = old_A + M + old_C;
+	set_Z(cpu, new_A);
 
 	log_op_end(cpu, cpu->A, ncycles);
 
@@ -6787,52 +6784,28 @@ int do_SBC_zpg_BCD(CPU *cpu)
 	byte old_A = cpu->A;
 	byte old_C = (cpu->SR & C)?1:0;
 
-	// 	Do the subtraction and update C
-	int rl, rh, tc; 	// result low byte, high byte, temp carry flag
-	rl = (cpu->A & 0x0F) + (~M&0x0F) + ((cpu->SR & C)?1:0);
-	//	(Trim ~M to 4 bits so the carry bit doesn't get lost 28 bits to the left)
-	if ((rl & 0x10) == 0)	// Check to see if the carry bit got "borrowed"
+	// Do the subtraction:
+	int AL = (old_A & 0x0F) - (M & 0x0F) + (old_C - 1);
+	if (AL < 0)
 	{
-		rl = rl - 6;
-		tc = 0;
+		AL = ((AL - 0x06) & 0x0F) - 0x10;
 	}
-	else
+	int new_A = (old_A & 0xF0) - (M & 0xF0) + AL;
+	if (new_A < 0)
 	{
-		rl = rl & 0x0F;
-		tc = 1;
-	}
-	rh = (cpu->A>>4) + ((~M>>4)&0x0F) + tc;
-	if ((rh & 0x10) == 0)	// Check to see if the carry bit got "borrowed"
-	{
-		rh = rh - 6;
-		tc = 0;
-	}
-	else
-	{
-		rh = rh & 0x0F;
-		tc = 1;
-	}
-
-	int result = rl + (rh<<4);
-
-	// Set the actual carry bit based on the placeholder
-	if (tc == 0)
-	{
-		cpu->SR &= ~C;
-	}
-	else
-	{
-		cpu->SR |= C;
+		new_A = new_A - 0x60;
 	}
 
 	// 	Store in A
-	cpu->A = result;
+	cpu->A = new_A & 0xFF;
 
 	// 	Redo the math in true binary and set N,V,Z if necessary
 	// 		This logic may not be right.  Check.
-	result = old_A + M + old_C;
+	int result = old_A + (~M&0xFF) + old_C;
+	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
+	set_C(cpu, result);
 	set_N(cpu, result);
-	set_V(cpu, cpu->A, ~M, result);
+	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
 	log_op_end(cpu, cpu->A, ncycles);
