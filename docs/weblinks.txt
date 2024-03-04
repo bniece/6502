@@ -8,3 +8,6 @@ https://superuser.com/questions/346658/does-the-6502-put-ff-in-the-stack-pointer
 
 How subtraction is done:
 http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
+
+BCD mode test and algorithms:
+http://www.6502.org/tutorials/decimal_mode.html
