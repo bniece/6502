@@ -4,6 +4,8 @@
 ;	0200: 15 00 00 00
 ;	0210: 00 00 01 01
 ;	0220: 81 01 00 00
+CLC	; for a clean starting point
+
 LDY #$01	; for marking flags
 
 LDA #$2A

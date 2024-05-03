@@ -1,8 +1,9 @@
 ;test_PLP_impl
 ;Expected outcome:
-;	Flags = NvbDIzc
+;	Flags = NvBDIzc
 ;	SP = 0xFF
 SED
+CLC
 
 LDX #$FF
 TXS

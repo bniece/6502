@@ -5,7 +5,7 @@
 ;	0210: 2B 00 00 00 01
 ;	0220: 29 01 00 00 00
 LDX #$01	; for marking set flags
-LDY #$0
+LDY #$01
 
 LDA #$2A
 STA $02FF

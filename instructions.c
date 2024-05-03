@@ -18,8 +18,8 @@ void log_op_start(CPU *cpu, char *op, int bytes)
 	printf("0x%04X %-9s (%d bytes) ", cpu->PC, op, bytes);
 }
 
-void log_op_end(CPU *cpu, byte result, int cycles)
-// Count cycles, print operation result & status register
+void log_op_end(CPU *cpu, int address, byte result, int cycles)
+// Count cycles, print operation address, result & status register
 {
 	for (cpu->TC = 0; cpu->TC < cycles; cpu->TC++)
 	{
@@ -30,7 +30,14 @@ void log_op_end(CPU *cpu, byte result, int cycles)
 		printf("  ");
 	}
 
-	printf(" 0x%02X", result);
+	if (address == -1)
+	{
+		printf("       0x%02X", result);
+	}
+	else
+	{
+		printf("0x%04X 0x%02X", address, result);
+	}
 
 	printf(" %c%c%c%c%c%c%c%c", cpu->SR & N ? 'N' : '.', 
 			cpu->SR & V ? 'V' : '.', '.', cpu->SR & B ? 'B' : '.', 
@@ -68,7 +75,7 @@ int do_ADC_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -108,7 +115,7 @@ int do_ADC_abs(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -119,6 +126,7 @@ int do_ADC_absX(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "ADC absX", nbytes);
@@ -140,7 +148,7 @@ int do_ADC_absX(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -150,7 +158,7 @@ int do_ADC_absX(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -167,7 +175,7 @@ int do_ADC_absX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -178,6 +186,7 @@ int do_ADC_absY(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "ADC absY", nbytes);
@@ -199,7 +208,7 @@ int do_ADC_absY(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -209,7 +218,7 @@ int do_ADC_absY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -226,7 +235,7 @@ int do_ADC_absY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -262,7 +271,7 @@ int do_ADC_zpg(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -301,7 +310,7 @@ int do_ADC_zpgX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -331,12 +340,13 @@ int do_ADC_Xind(CPU *cpu)
 
 	// Cycle 4: Fetch high byte of address
 	byte adh = read(*cpu->bus, zad);
+	word addr = (adh << 8) + adl;
 
 	// Cycle 5: fetch byte
 	// 	Do the addition and update C
 	// 	Set N,V,Z if necessary
 	// 	Store in A
-	byte M = read(*cpu->bus, (adh << 8) + adl);
+	byte M = read(*cpu->bus, addr);
 
 	int result = cpu->A + M + ((cpu->SR & C)?1:0);
 	set_C(cpu, result);
@@ -347,7 +357,7 @@ int do_ADC_Xind(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -358,6 +368,7 @@ int do_ADC_indY(CPU *cpu)
 {
 	int nbytes = 2;
 	int ncycles = 5;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "ADC ind,Y", nbytes);
@@ -380,7 +391,7 @@ int do_ADC_indY(CPU *cpu)
 	// Cycle 4:  if no carry on bal, fetch byte and be done 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -390,7 +401,7 @@ int do_ADC_indY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 5:  fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 
@@ -406,7 +417,7 @@ int do_ADC_indY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -437,7 +448,7 @@ int do_AND_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -475,7 +486,7 @@ int do_AND_abs(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -486,6 +497,7 @@ int do_AND_absX(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "AND absX", nbytes);
@@ -507,7 +519,7 @@ int do_AND_absX(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -517,7 +529,7 @@ int do_AND_absX(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -532,7 +544,7 @@ int do_AND_absX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -543,6 +555,7 @@ int do_AND_absY(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "AND absY", nbytes);
@@ -564,7 +577,7 @@ int do_AND_absY(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -574,7 +587,7 @@ int do_AND_absY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -589,7 +602,7 @@ int do_AND_absY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -623,7 +636,7 @@ int do_AND_zpg(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -660,7 +673,7 @@ int do_AND_zpgX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -690,12 +703,13 @@ int do_AND_Xind(CPU *cpu)
 
 	// Cycle 4: Fetch high byte of address
 	byte adh = read(*cpu->bus, zad);
+	word addr = (adh << 8) + adl;
 
 	// Cycle 5: fetch byte
 	// 	Do the AND operation
 	// 	Set N,Z if necessary
 	// 	Store in A
-	byte M = read(*cpu->bus, (adh << 8) + adl);
+	byte M = read(*cpu->bus, addr);
 
 	int result = cpu->A & M;
 
@@ -704,7 +718,7 @@ int do_AND_Xind(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -715,6 +729,7 @@ int do_AND_indY(CPU *cpu)
 {
 	int nbytes = 2;
 	int ncycles = 5;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "AND ind,Y", nbytes);
@@ -737,7 +752,7 @@ int do_AND_indY(CPU *cpu)
 	// Cycle 4:  if no carry on bal, fetch byte and be done 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -747,7 +762,7 @@ int do_AND_indY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 5:  fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 
@@ -761,7 +776,7 @@ int do_AND_indY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -792,7 +807,7 @@ int do_ASL_A(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -837,7 +852,7 @@ int do_ASL_abs(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -893,7 +908,7 @@ int do_ASL_absX(CPU *cpu)
 	// Cycle 6: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -934,7 +949,7 @@ int do_ASL_zpg(CPU *cpu)
 	// Cycle 4: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -978,7 +993,7 @@ int do_ASL_zpgX(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -1032,7 +1047,7 @@ int do_BCC_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, -1, M, ncycles);
 
 	return ncycles;
 }
@@ -1086,7 +1101,7 @@ int do_BCS_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, -1, M, ncycles);
 
 	return ncycles;
 }
@@ -1140,7 +1155,7 @@ int do_BEQ_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, -1, M, ncycles);
 
 	return ncycles;
 }
@@ -1183,7 +1198,7 @@ int do_BIT_abs(CPU *cpu)
 	}
 	set_Z(cpu, result);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -1222,7 +1237,7 @@ int do_BIT_zpg(CPU *cpu)
 	}
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1276,7 +1291,7 @@ int do_BMI_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, -1, M, ncycles);
 
 	return ncycles;
 }
@@ -1330,7 +1345,7 @@ int do_BNE_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, -1, M, ncycles);
 
 	return ncycles;
 }
@@ -1384,7 +1399,7 @@ int do_BPL_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, -1, M, ncycles);
 
 	return ncycles;
 }
@@ -1397,7 +1412,7 @@ int do_BRK_impl(CPU *cpu)
 	int ncycles = 7;
 
 	log_op_start(cpu, "BRK   ", nbytes);
-	log_op_end(cpu, 0, ncycles);
+	log_op_end(cpu, -1, 0, ncycles);
 
 	return ncycles;
 }
@@ -1451,7 +1466,7 @@ int do_BVC_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, -1, M, ncycles);
 
 	return ncycles;
 }
@@ -1505,7 +1520,7 @@ int do_BVS_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, -1, M, ncycles);
 
 	return ncycles;
 }
@@ -1524,7 +1539,7 @@ int do_CLC_impl(CPU *cpu)
 	// Cycle 1: Clear C
 	cpu->SR &= ~C;
 
-	log_op_end(cpu, cpu->SR, ncycles);
+	log_op_end(cpu, -1, cpu->SR, ncycles);
 
 	return ncycles;
 }
@@ -1543,7 +1558,7 @@ int do_CLI_impl(CPU *cpu)
 	// Cycle 1: Clear I
 	cpu->SR &= ~I;
 
-	log_op_end(cpu, cpu->SR, ncycles);
+	log_op_end(cpu, -1, cpu->SR, ncycles);
 
 	return ncycles;
 }
@@ -1564,7 +1579,7 @@ int do_CLV_impl(CPU *cpu)
 	// Cycle 1: Clear V
 	cpu->SR &= ~V;
 
-	log_op_end(cpu, cpu->SR, ncycles);
+	log_op_end(cpu, -1, cpu->SR, ncycles);
 
 	return ncycles;
 }
@@ -1596,7 +1611,7 @@ int do_CMP_imm(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1635,7 +1650,7 @@ int do_CMP_abs(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1646,6 +1661,7 @@ int do_CMP_absX(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "CMP absX", nbytes);
@@ -1667,7 +1683,7 @@ int do_CMP_absX(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -1677,7 +1693,7 @@ int do_CMP_absX(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -1692,7 +1708,7 @@ int do_CMP_absX(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1703,6 +1719,7 @@ int do_CMP_absY(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "CMP absY", nbytes);
@@ -1724,7 +1741,7 @@ int do_CMP_absY(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -1734,7 +1751,7 @@ int do_CMP_absY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -1749,7 +1766,7 @@ int do_CMP_absY(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1784,7 +1801,7 @@ int do_CMP_zpg(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1822,7 +1839,7 @@ int do_CMP_zpgX(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1852,11 +1869,12 @@ int do_CMP_Xind(CPU *cpu)
 
 	// Cycle 4: Fetch high byte of address
 	byte adh = read(*cpu->bus, zad);
+	word addr = (adh << 8) + adl;
 
 	// Cycle 5: fetch byte
 	// 	Do the subtraction and update C
 	// 	Set N,Z if necessary
-	byte M = read(*cpu->bus, (adh << 8) + adl);
+	byte M = read(*cpu->bus, addr);
 
 	int result = cpu->A + (~M&0xFF) + 1;
 	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
@@ -1867,7 +1885,7 @@ int do_CMP_Xind(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1878,6 +1896,7 @@ int do_CMP_indY(CPU *cpu)
 {
 	int nbytes = 2;
 	int ncycles = 5;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "CMP indY", nbytes);
@@ -1900,7 +1919,7 @@ int do_CMP_indY(CPU *cpu)
 	// Cycle 4:  if no carry on bal, fetch byte and be done 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -1910,7 +1929,7 @@ int do_CMP_indY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 5:  fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 
@@ -1925,7 +1944,7 @@ int do_CMP_indY(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -1957,7 +1976,7 @@ int do_CPX_imm(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, -1, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -1996,7 +2015,7 @@ int do_CPX_abs(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, addr, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -2031,7 +2050,7 @@ int do_CPX_zpg(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, addr, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -2063,7 +2082,7 @@ int do_CPY_imm(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->Y, ncycles);
+	log_op_end(cpu, -1, cpu->Y, ncycles);
 
 	return ncycles;
 }
@@ -2102,7 +2121,7 @@ int do_CPY_abs(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->Y, ncycles);
+	log_op_end(cpu, addr, cpu->Y, ncycles);
 
 	return ncycles;
 }
@@ -2137,7 +2156,7 @@ int do_CPY_zpg(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, addr, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -2174,7 +2193,7 @@ int do_DEC_abs(CPU *cpu)
 	// Cycle 5: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -2222,7 +2241,7 @@ int do_DEC_absX(CPU *cpu)
 	// Cycle 6: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -2255,7 +2274,7 @@ int do_DEC_zpg(CPU *cpu)
 	// Cycle 4: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -2291,7 +2310,7 @@ int do_DEC_zpgX(CPU *cpu)
 	// Cycle 5: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -2322,7 +2341,7 @@ int do_EOR_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -2360,7 +2379,7 @@ int do_EOR_abs(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -2371,6 +2390,7 @@ int do_EOR_absX(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "EOR absX", nbytes);
@@ -2392,7 +2412,7 @@ int do_EOR_absX(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -2402,7 +2422,7 @@ int do_EOR_absX(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -2417,7 +2437,7 @@ int do_EOR_absX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -2428,6 +2448,7 @@ int do_EOR_absY(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "EOR absY", nbytes);
@@ -2449,7 +2470,7 @@ int do_EOR_absY(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -2459,7 +2480,7 @@ int do_EOR_absY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -2474,7 +2495,7 @@ int do_EOR_absY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -2508,7 +2529,7 @@ int do_EOR_zpg(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -2545,7 +2566,7 @@ int do_EOR_zpgX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -2575,12 +2596,13 @@ int do_EOR_Xind(CPU *cpu)
 
 	// Cycle 4: Fetch high byte of address
 	byte adh = read(*cpu->bus, zad);
+	word addr = (adh << 8) + adl;
 
 	// Cycle 5: fetch byte
 	// 	Do the XOR operation
 	// 	Set N,Z if necessary
 	// 	Store in A
-	byte M = read(*cpu->bus, (adh << 8) + adl);
+	byte M = read(*cpu->bus, addr);
 
 	int result = cpu->A ^ M;
 
@@ -2589,7 +2611,7 @@ int do_EOR_Xind(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -2600,6 +2622,7 @@ int do_EOR_indY(CPU *cpu)
 {
 	int nbytes = 2;
 	int ncycles = 5;
+	word addr;
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "EOR ind,Y", nbytes);
@@ -2622,7 +2645,7 @@ int do_EOR_indY(CPU *cpu)
 	// Cycle 4:  if no carry on bal, fetch byte and be done 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -2632,7 +2655,7 @@ int do_EOR_indY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 5:  fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 
@@ -2646,7 +2669,7 @@ int do_EOR_indY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -2683,7 +2706,7 @@ int do_INC_abs(CPU *cpu)
 	// Cycle 5: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -2731,7 +2754,7 @@ int do_INC_absX(CPU *cpu)
 	// Cycle 6: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -2764,7 +2787,7 @@ int do_INC_zpg(CPU *cpu)
 	// Cycle 4: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -2800,7 +2823,7 @@ int do_INC_zpgX(CPU *cpu)
 	// Cycle 5: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -2823,7 +2846,7 @@ int do_DEX_impl(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, -1, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -2846,7 +2869,7 @@ int do_DEY_impl(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, cpu->Y, ncycles);
+	log_op_end(cpu, -1, cpu->Y, ncycles);
 
 	return ncycles;
 }
@@ -2869,7 +2892,7 @@ int do_INX_impl(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, -1, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -2892,7 +2915,7 @@ int do_INY_impl(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, cpu->Y, ncycles);
+	log_op_end(cpu, -1, cpu->Y, ncycles);
 
 	return ncycles;
 }
@@ -2915,10 +2938,11 @@ int do_JMP_abs(CPU *cpu)
 	// Cycle 2:  fetch high byte of address, increment PC
 	//		set PC for jump
 	byte adh = read(*cpu->bus, cpu->PC);
+	word addr = adl + (adh << 8);
 	cpu->PC++;
-	cpu->PC = adl + (adh << 8);
+	cpu->PC = addr;
 
-	log_op_end(cpu, adl, ncycles);
+	log_op_end(cpu, addr, adl, ncycles);
 
 	return ncycles;
 }
@@ -2951,9 +2975,10 @@ int do_JMP_ind(CPU *cpu)
 	//			behavior for a MOS 6502.
 	all = all + 1;
 	byte adh = read(*cpu->bus, all + (alh << 8));
-	cpu->PC = adl + (adh << 8);
+	word addr = adl + (adh << 8);
+	cpu->PC = addr;
 
-	log_op_end(cpu, adl, ncycles);
+	log_op_end(cpu, addr, adl, ncycles);
 
 	return ncycles;
 }
@@ -2984,12 +3009,13 @@ int do_JSR_abs(CPU *cpu)
 
 	// Cycle 4:  fetch high byte of address, increment PC
 	byte adh = read(*cpu->bus, cpu->PC);
+	word addr = adl + (adh << 8);
 	cpu->PC++;
 
 	// Cycle 5:  Set PC for jump
-	cpu->PC = adl + (adh << 8);
+	cpu->PC = addr;
 
-	log_op_end(cpu, adl, ncycles);
+	log_op_end(cpu, addr, adl, ncycles);
 
 	return ncycles;
 }
@@ -3020,7 +3046,7 @@ int do_ORA_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3058,7 +3084,7 @@ int do_ORA_abs(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3069,6 +3095,7 @@ int do_ORA_absX(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "ORA absX", nbytes);
@@ -3090,7 +3117,7 @@ int do_ORA_absX(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -3100,7 +3127,7 @@ int do_ORA_absX(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -3115,7 +3142,7 @@ int do_ORA_absX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3126,6 +3153,7 @@ int do_ORA_absY(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "ORA absY", nbytes);
@@ -3147,7 +3175,7 @@ int do_ORA_absY(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -3157,7 +3185,7 @@ int do_ORA_absY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -3172,7 +3200,7 @@ int do_ORA_absY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3206,7 +3234,7 @@ int do_ORA_zpg(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3243,7 +3271,7 @@ int do_ORA_zpgX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3273,12 +3301,13 @@ int do_ORA_Xind(CPU *cpu)
 
 	// Cycle 4: Fetch high byte of address
 	byte adh = read(*cpu->bus, zad);
+	word addr = (adh << 8) + adl;
 
 	// Cycle 5: fetch byte
 	// 	Do the OR operation
 	// 	Set N,Z if necessary
 	// 	Store in A
-	byte M = read(*cpu->bus, (adh << 8) + adl);
+	byte M = read(*cpu->bus, addr);
 
 	int result = cpu->A | M;
 
@@ -3287,7 +3316,7 @@ int do_ORA_Xind(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3298,6 +3327,7 @@ int do_ORA_indY(CPU *cpu)
 {
 	int nbytes = 2;
 	int ncycles = 5;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "ORA ind,Y", nbytes);
@@ -3320,7 +3350,7 @@ int do_ORA_indY(CPU *cpu)
 	// Cycle 4:  if no carry on bal, fetch byte and be done 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -3330,7 +3360,7 @@ int do_ORA_indY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 5:  fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 
@@ -3344,7 +3374,7 @@ int do_ORA_indY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3366,7 +3396,7 @@ int do_PHA_impl(CPU *cpu)
 	// Cycle 2: Decrement stack pointer
 	cpu->SP--;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3382,13 +3412,13 @@ int do_PHP_impl(CPU *cpu)
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
 	
-	// Cycle 1: copy SR to stack
-	write(*cpu->bus, 0x0100 + cpu->SP, cpu->SR);
+	// Cycle 1: copy SR to stack, setting B
+	write(*cpu->bus, 0x0100 + cpu->SP, cpu->SR | 0x10);
 
 	// Cycle 2: Decrement stack pointer
 	cpu->SP--;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3414,7 +3444,7 @@ int do_PLA_impl(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3438,7 +3468,7 @@ int do_PLP_impl(CPU *cpu)
 
 	// Cycle 3: Not sure what happens here.  Flags should be set
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3462,7 +3492,7 @@ int do_LDA_imm(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3493,7 +3523,7 @@ int do_LDA_abs(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3503,6 +3533,7 @@ int do_LDA_absX(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr; 				// Memory location
 
 	log_op_start(cpu, "LDA absX", nbytes);
 
@@ -3523,7 +3554,7 @@ int do_LDA_absX(CPU *cpu)
 	// Cycle 3:  if no carry on bal, load A and be done 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		cpu->A = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and do load on next cycle
@@ -3533,7 +3564,7 @@ int do_LDA_absX(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4:  store byte in A
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		cpu->A = read(*cpu->bus, addr);
 	}
 
@@ -3541,7 +3572,7 @@ int do_LDA_absX(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3551,6 +3582,7 @@ int do_LDA_absY(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;				// Memory location
 
 	log_op_start(cpu, "LDA absY", nbytes);
 
@@ -3571,7 +3603,7 @@ int do_LDA_absY(CPU *cpu)
 	// Cycle 3:  if no carry on bal, load A and be done 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		cpu->A = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and do load on next cycle
@@ -3581,7 +3613,7 @@ int do_LDA_absY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4:  store byte in A
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		cpu->A = read(*cpu->bus, addr);
 	}
 
@@ -3589,7 +3621,7 @@ int do_LDA_absY(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3616,7 +3648,7 @@ int do_LDA_zpg(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3646,7 +3678,7 @@ int do_LDA_zpgX(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3675,15 +3707,16 @@ int do_LDA_Xind(CPU *cpu)
 
 	// Cycle 4: Fetch high byte of address
 	byte adh = read(*cpu->bus, zad);
+	word addr = (adh << 8) + adl;
 
 	// Cycle 5:  store byte in A
 	// 	Set N,Z if necessary
-	cpu->A = read(*cpu->bus, (adh << 8) + adl);
+	cpu->A = read(*cpu->bus, addr);
 
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3693,6 +3726,7 @@ int do_LDA_indY(CPU *cpu)
 {
 	int nbytes = 2;
 	int ncycles = 5;
+	word addr;				// Memory location
 
 	log_op_start(cpu, "LDA ind,Y", nbytes);
 
@@ -3714,7 +3748,7 @@ int do_LDA_indY(CPU *cpu)
 	// Cycle 4:  if no carry on bal, load A and be done 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		cpu->A = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and do load on next cycle
@@ -3724,7 +3758,7 @@ int do_LDA_indY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4:  store byte in A
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		cpu->A = read(*cpu->bus, addr);
 	}
 
@@ -3732,7 +3766,7 @@ int do_LDA_indY(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -3756,7 +3790,7 @@ int do_LDX_imm(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, -1, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -3787,7 +3821,7 @@ int do_LDX_abs(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, addr, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -3797,6 +3831,7 @@ int do_LDX_absY(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;				// Memory location
 
 	log_op_start(cpu, "LDX absY", nbytes);
 
@@ -3817,7 +3852,7 @@ int do_LDX_absY(CPU *cpu)
 	// Cycle 3:  if no carry on bal, load X and be done 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		cpu->X = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and do load on next cycle
@@ -3827,7 +3862,7 @@ int do_LDX_absY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4:  store byte in X
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		cpu->X = read(*cpu->bus, addr);
 	}
 
@@ -3835,7 +3870,7 @@ int do_LDX_absY(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, addr, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -3862,7 +3897,7 @@ int do_LDX_zpg(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, addr, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -3892,7 +3927,7 @@ int do_LDX_zpgY(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, addr, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -3916,7 +3951,7 @@ int do_LDY_imm(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, cpu->Y, ncycles);
+	log_op_end(cpu, -1, cpu->Y, ncycles);
 
 	return ncycles;
 }
@@ -3947,7 +3982,7 @@ int do_LDY_abs(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, cpu->Y, ncycles);
+	log_op_end(cpu, addr, cpu->Y, ncycles);
 
 	return ncycles;
 }
@@ -3957,6 +3992,7 @@ int do_LDY_absX(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;				// Memory location
 
 	log_op_start(cpu, "LDY absX", nbytes);
 
@@ -3977,7 +4013,7 @@ int do_LDY_absX(CPU *cpu)
 	// Cycle 3:  if no carry on bal, load Y and be done 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		cpu->Y = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and do load on next cycle
@@ -3987,7 +4023,7 @@ int do_LDY_absX(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4:  store byte in Y
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		cpu->Y = read(*cpu->bus, addr);
 	}
 
@@ -3995,7 +4031,7 @@ int do_LDY_absX(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, cpu->Y, ncycles);
+	log_op_end(cpu, addr, cpu->Y, ncycles);
 
 	return ncycles;
 }
@@ -4022,7 +4058,7 @@ int do_LDY_zpg(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, cpu->Y, ncycles);
+	log_op_end(cpu, addr, cpu->Y, ncycles);
 
 	return ncycles;
 }
@@ -4052,7 +4088,7 @@ int do_LDY_zpgX(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, cpu->Y, ncycles);
+	log_op_end(cpu, addr, cpu->Y, ncycles);
 
 	return ncycles;
 }
@@ -4084,7 +4120,7 @@ int do_LSR_A(CPU *cpu)
 	//   Set Z if necessary
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -4130,7 +4166,7 @@ int do_LSR_abs(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -4187,7 +4223,7 @@ int do_LSR_absX(CPU *cpu)
 	// Cycle 6: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -4229,7 +4265,7 @@ int do_LSR_zpg(CPU *cpu)
 	// Cycle 4: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -4274,7 +4310,7 @@ int do_LSR_zpgX(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -4292,7 +4328,7 @@ int do_NOP_impl(CPU *cpu)
 
 	// Cycle 1: Do nothing
 	
-	log_op_end(cpu, 0, ncycles);
+	log_op_end(cpu, -1, 0, ncycles);
 
 	return ncycles;
 }
@@ -4326,7 +4362,7 @@ int do_ROL_A(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -4374,7 +4410,7 @@ int do_ROL_abs(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -4433,7 +4469,7 @@ int do_ROL_absX(CPU *cpu)
 	// Cycle 6: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -4477,7 +4513,7 @@ int do_ROL_zpg(CPU *cpu)
 	// Cycle 4: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -4524,7 +4560,7 @@ int do_ROL_zpgX(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -4558,7 +4594,7 @@ int do_ROR_A(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -4606,7 +4642,7 @@ int do_ROR_abs(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -4665,7 +4701,7 @@ int do_ROR_absX(CPU *cpu)
 	// Cycle 6: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -4709,7 +4745,7 @@ int do_ROR_zpg(CPU *cpu)
 	// Cycle 4: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -4756,7 +4792,7 @@ int do_ROR_zpgX(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, M, ncycles);
+	log_op_end(cpu, addr, M, ncycles);
 
 	return ncycles;
 }
@@ -4790,7 +4826,7 @@ int do_RTI_impl(CPU *cpu)
 	//   Put return address into PC
 	cpu->PC = adl + (adh << 8);
 
-	log_op_end(cpu, adl, ncycles);
+	log_op_end(cpu, -1, adl, ncycles);
 
 	return ncycles;
 }
@@ -4821,7 +4857,7 @@ int do_RTS_impl(CPU *cpu)
 	// Cycle 5: Put return address into PC (add 1 for next instruction)
 	cpu->PC = adl + (adh << 8) + 1;
 
-	log_op_end(cpu, adl, ncycles);
+	log_op_end(cpu, -1, adl, ncycles);
 
 	return ncycles;
 }
@@ -4855,7 +4891,7 @@ int do_SBC_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -4896,7 +4932,7 @@ int do_SBC_abs(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -4907,6 +4943,7 @@ int do_SBC_absX(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Subtrahend from memory
 
 	log_op_start(cpu, "SBC absX", nbytes);
@@ -4928,7 +4965,7 @@ int do_SBC_absX(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -4938,7 +4975,7 @@ int do_SBC_absX(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -4955,7 +4992,7 @@ int do_SBC_absX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -4966,6 +5003,7 @@ int do_SBC_absY(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Subtrahend from memory
 
 	log_op_start(cpu, "SBC absY", nbytes);
@@ -4987,7 +5025,7 @@ int do_SBC_absY(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -4997,7 +5035,7 @@ int do_SBC_absY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -5014,7 +5052,7 @@ int do_SBC_absY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5051,7 +5089,7 @@ int do_SBC_zpg(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5091,7 +5129,7 @@ int do_SBC_zpgX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5121,12 +5159,13 @@ int do_SBC_Xind(CPU *cpu)
 
 	// Cycle 4: Fetch high byte of address
 	byte adh = read(*cpu->bus, zad);
+	word addr = (adh << 8) + adl;
 
 	// Cycle 5: fetch byte
 	// 	Do the subtraction and update C
 	// 	Set N,V,Z if necessary
 	// 	Store in A
-	byte M = read(*cpu->bus, (adh << 8) + adl);
+	byte M = read(*cpu->bus, addr);
 
 	int result = cpu->A + (~M&0xFF) + ((cpu->SR & C)?1:0);
 	//	(Trim ~M to 8 bits so the carry bit doesn't get lost 24 bits to the left)
@@ -5138,7 +5177,7 @@ int do_SBC_Xind(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5149,6 +5188,7 @@ int do_SBC_indY(CPU *cpu)
 {
 	int nbytes = 2;
 	int ncycles = 5;
+	word addr;			// Memory location
 	byte M;				// Subtrahend from memory
 
 	log_op_start(cpu, "SBC ind,Y", nbytes);
@@ -5171,7 +5211,7 @@ int do_SBC_indY(CPU *cpu)
 	// Cycle 4:  if no carry on bal, fetch byte and be done 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and do fetch on next cycle
@@ -5181,7 +5221,7 @@ int do_SBC_indY(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4:  fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 
@@ -5199,7 +5239,7 @@ int do_SBC_indY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5218,7 +5258,7 @@ int do_SEC_impl(CPU *cpu)
 	// Cycle 1: Set C
 	cpu->SR |= C;
 
-	log_op_end(cpu, cpu->SR, ncycles);
+	log_op_end(cpu, -1, cpu->SR, ncycles);
 
 	return ncycles;
 }
@@ -5237,7 +5277,7 @@ int do_SEI_impl(CPU *cpu)
 	// Cycle 1: Set I
 	cpu->SR |= I;
 
-	log_op_end(cpu, cpu->SR, ncycles);
+	log_op_end(cpu, -1, cpu->SR, ncycles);
 
 	return ncycles;
 }
@@ -5266,7 +5306,7 @@ int do_STA_abs(CPU *cpu)
 	// Cycle 3:  store A at addr
 	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5304,7 +5344,7 @@ int do_STA_absX(CPU *cpu)
 	word addr = (bah << 8) + bal;
 	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5342,7 +5382,7 @@ int do_STA_absY(CPU *cpu)
 	word addr = (bah << 8) + bal;
 	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5365,7 +5405,7 @@ int do_STA_zpg(CPU *cpu)
 	// Cycle 2:  store A at addr
 	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5391,7 +5431,7 @@ int do_STA_zpgX(CPU *cpu)
 	// Cycle 3:  store A at addr
 	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5420,11 +5460,12 @@ int do_STA_Xind(CPU *cpu)
 
 	// Cycle 4: Fetch high byte of address
 	byte adh = read(*cpu->bus, zad);
+	word addr = (adh << 8) + adl;
 
 	// Cycle 5:  store A at addr
-	write(*cpu->bus, (adh << 8) + adl, cpu->A);
+	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5463,7 +5504,7 @@ int do_STA_indY(CPU *cpu)
 	word addr = (bah << 8) + bal;
 	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5490,7 +5531,7 @@ int do_STX_abs(CPU *cpu)
 	// Cycle 3:  store X at addr
 	write(*cpu->bus, addr, cpu->X);
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, addr, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -5513,7 +5554,7 @@ int do_STX_zpg(CPU *cpu)
 	// Cycle 2:  store X at addr
 	write(*cpu->bus, addr, cpu->X);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5539,7 +5580,7 @@ int do_STX_zpgY(CPU *cpu)
 	// Cycle 3:  store X at addr
 	write(*cpu->bus, addr, cpu->X);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5566,7 +5607,7 @@ int do_STY_abs(CPU *cpu)
 	// Cycle 3:  store Y at addr
 	write(*cpu->bus, addr, cpu->Y);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5589,7 +5630,7 @@ int do_STY_zpg(CPU *cpu)
 	// Cycle 2:  store Y at addr
 	write(*cpu->bus, addr, cpu->Y);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5615,7 +5656,7 @@ int do_STY_zpgX(CPU *cpu)
 	// Cycle 3:  store Y at addr
 	write(*cpu->bus, addr, cpu->Y);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5638,7 +5679,7 @@ int do_TAX_impl(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, -1, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -5657,7 +5698,7 @@ int do_TSX_impl(CPU *cpu)
 	// Cycle 1: copy byte from A to X
 	cpu->X = cpu->SP;
 
-	log_op_end(cpu, cpu->X, ncycles);
+	log_op_end(cpu, -1, cpu->X, ncycles);
 
 	return ncycles;
 }
@@ -5680,7 +5721,7 @@ int do_TAY_impl(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, cpu->Y, ncycles);
+	log_op_end(cpu, -1, cpu->Y, ncycles);
 
 	return ncycles;
 }
@@ -5703,7 +5744,7 @@ int do_TXA_impl(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5722,7 +5763,7 @@ int do_TXS_impl(CPU *cpu)
 	// Cycle 1: copy byte from X to SP
 	cpu->SP = cpu->X;
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5745,7 +5786,7 @@ int do_TYA_impl(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5815,7 +5856,7 @@ int do_ADC_imm_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5892,7 +5933,7 @@ int do_ADC_abs_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5904,6 +5945,7 @@ int do_ADC_absX_BCD(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "ADC absX", nbytes);
@@ -5925,7 +5967,7 @@ int do_ADC_absX_BCD(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -5935,7 +5977,7 @@ int do_ADC_absX_BCD(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -5987,7 +6029,7 @@ int do_ADC_absX_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -5999,6 +6041,7 @@ int do_ADC_absY_BCD(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
 
 	log_op_start(cpu, "ADC absY", nbytes);
@@ -6020,7 +6063,7 @@ int do_ADC_absY_BCD(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -6030,7 +6073,7 @@ int do_ADC_absY_BCD(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -6082,7 +6125,7 @@ int do_ADC_absY_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -6155,7 +6198,7 @@ int do_ADC_zpg_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -6231,7 +6274,7 @@ int do_ADC_zpgX_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -6262,9 +6305,10 @@ int do_ADC_Xind_BCD(CPU *cpu)
 
 	// Cycle 4: Fetch high byte of address
 	byte adh = read(*cpu->bus, zad);
+	word addr = (adh << 8) + adl;
 
 	// Cycle 5:  fetch byte
-	byte M = read(*cpu->bus, (adh << 8) + adl);
+	byte M = read(*cpu->bus, addr);
 
 	//		Store values for flag checks at end
 	byte old_A = cpu->A;
@@ -6314,7 +6358,7 @@ int do_ADC_Xind_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -6326,8 +6370,9 @@ int do_ADC_indY_BCD(CPU *cpu)
 {
 	int nbytes = 2;
 	int ncycles = 5;
+	word addr;			// Memory location
 	byte M;				// Addend from memory
-							//
+
 	log_op_start(cpu, "ADC ind,Y", nbytes);
 
 	// Cycle 0: instruction fetched, increment PC
@@ -6348,7 +6393,7 @@ int do_ADC_indY_BCD(CPU *cpu)
 	// Cycle 4:  if no carry on bal, fetch byte and be done 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and do fetch on next cycle
@@ -6358,7 +6403,7 @@ int do_ADC_indY_BCD(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4:  fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 
@@ -6410,7 +6455,7 @@ int do_ADC_indY_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -6460,7 +6505,7 @@ int do_SBC_imm_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, -1, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -6517,7 +6562,7 @@ int do_SBC_abs_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -6529,6 +6574,7 @@ int do_SBC_absX_BCD(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Subtrahend from memory
 
 	log_op_start(cpu, "SBC absX", nbytes);
@@ -6550,7 +6596,7 @@ int do_SBC_absX_BCD(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -6560,7 +6606,7 @@ int do_SBC_absX_BCD(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -6592,7 +6638,7 @@ int do_SBC_absX_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -6604,6 +6650,7 @@ int do_SBC_absY_BCD(CPU *cpu)
 {
 	int nbytes = 3;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Subtrahend from memory
 
 	log_op_start(cpu, "SBC absY", nbytes);
@@ -6625,7 +6672,7 @@ int do_SBC_absY_BCD(CPU *cpu)
 	// Cycle 3:  if no carry on bal, fetch byte and move on 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and fetch byte on next cycle
@@ -6635,7 +6682,7 @@ int do_SBC_absY_BCD(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4: fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -6667,7 +6714,7 @@ int do_SBC_absY_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -6720,7 +6767,7 @@ int do_SBC_zpg_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -6776,7 +6823,7 @@ int do_SBC_zpgX_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -6807,9 +6854,10 @@ int do_SBC_Xind_BCD(CPU *cpu)
 
 	// Cycle 4: Fetch high byte of address
 	byte adh = read(*cpu->bus, zad);
+	word addr = (adh << 8) + adl;
 
 	// Cycle 5: fetch byte
-	byte M = read(*cpu->bus, (adh << 8) + adl);
+	byte M = read(*cpu->bus, addr);
 
 	// 	Store old values for flag checks at end
 	byte old_A = cpu->A;
@@ -6839,7 +6887,7 @@ int do_SBC_Xind_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -6851,6 +6899,7 @@ int do_SBC_indY_BCD(CPU *cpu)
 {
 	int nbytes = 2;
 	int ncycles = 4;
+	word addr;			// Memory location
 	byte M;				// Subtrahend from memory
 
 	log_op_start(cpu, "SBC ind,Y", nbytes);
@@ -6873,7 +6922,7 @@ int do_SBC_indY_BCD(CPU *cpu)
 	// Cycle 4:  if no carry on bal, fetch byte and be done 
 	if (bal < 256)
 	{
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}	
 	else //	otherwise, add carry to bah and do fetch on next cycle
@@ -6883,7 +6932,7 @@ int do_SBC_indY_BCD(CPU *cpu)
 		ncycles += 1;
 
 		// Cycle 4:  fetch byte
-		word addr = (bah << 8) + bal;
+		addr = (bah << 8) + bal;
 		M = read(*cpu->bus, addr);
 	}
 	
@@ -6915,7 +6964,7 @@ int do_SBC_indY_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, cpu->A, ncycles);
+	log_op_end(cpu, addr, cpu->A, ncycles);
 
 	return ncycles;
 }
@@ -6962,7 +7011,7 @@ do_BIT_zpg, 	// 0x24
 do_AND_zpg, 	// 0x25
 do_ROL_zpg, 	// 0x26
 do_NOP_impl, 	// 0x27
-do_NOP_impl, 	// 0x28
+do_PLP_impl, 	// 0x28
 do_AND_imm, 	// 0x29
 do_ROL_A, 		// 0x2A
 do_NOP_impl, 	// 0x2B
@@ -7147,7 +7196,7 @@ do_CMP_absX, 	// 0xDD
 do_DEC_absX, 	// 0xDE
 do_NOP_impl, 	// 0xDF
 do_CPX_imm, 	// 0xE0
-do_NOP_impl, 	// 0xE1
+do_SBC_Xind, 	// 0xE1
 do_NOP_impl, 	// 0xE2
 do_NOP_impl, 	// 0xE3
 do_CPX_zpg, 	// 0xE4
@@ -7167,7 +7216,7 @@ do_SBC_indY, 	// 0xF1
 do_NOP_impl, 	// 0xF2
 do_NOP_impl, 	// 0xF3
 do_NOP_impl, 	// 0xF4
-do_ADC_zpgX, 	// 0xF5
+do_SBC_zpgX, 	// 0xF5
 do_INC_zpgX, 	// 0xF6
 do_NOP_impl, 	// 0xF7
 do_SED_impl, 	// 0xF8
@@ -7211,7 +7260,7 @@ int do_CLD_impl(CPU *cpu)
 	execute[0xE1] = do_SBC_Xind;
 	execute[0xF1] = do_SBC_indY;
 
-	log_op_end(cpu, cpu->SR, ncycles);
+	log_op_end(cpu, -1, cpu->SR, ncycles);
 
 	return ncycles;
 }
@@ -7248,7 +7297,7 @@ int do_SED_impl(CPU *cpu)
 	execute[0xE1] = do_SBC_Xind_BCD;
 	execute[0xF1] = do_SBC_indY_BCD;
 
-	log_op_end(cpu, cpu->SR, ncycles);
+	log_op_end(cpu, -1, cpu->SR, ncycles);
 
 	return ncycles;
 }

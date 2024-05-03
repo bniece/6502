@@ -2,7 +2,7 @@
 ;Expected outcome:
 ;	A N Z
 ;	0200: 2A 00 00
-;	0210: oo 00 01
+;	0210: 00 00 01
 ;	0220: 00 00 01
 LDY #$01	; for marking flags
 LDX #$00

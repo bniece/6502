@@ -8,6 +8,8 @@
 ;	0210: 00 00 01
 ;	0220: 00 01 00
 ;	0230: 00 01 00
+CLC	; for a clean starting point
+
 LDY #$01	; for marking flags
 LDX #$00
 

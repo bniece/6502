@@ -4,6 +4,8 @@
 ;	C = 0
 * = $0600
 
+CLC	; for a clean starting point
+
 LDA #$06		; Set up stack as if it there was an interrupt
 PHA			;    very non-portable code
 LDA #$0A

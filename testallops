@@ -1,0 +1,14 @@
+#!/bin/bash
+
+for testfile in asmcode/optests/*.asm
+do
+	rm code.bin
+	xa -M -o code.bin $testfile
+
+	./em6502 -C 0 -S 0
+
+	echo
+	head -n `grep '^;' $testfile | wc -l` $testfile
+
+	read -p "Press Enter key to continue."
+done
