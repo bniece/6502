@@ -13,6 +13,7 @@
 // Logging functions
 void log_op_start(CPU *cpu, char *op, int bytes);
 void log_op_end(CPU *cpu, int address, byte result, int cycles);
+void set_print_trace(int pt);
 
 // Instruction handler functions
 int do_BRK_impl(CPU *cpu);	// 0x00

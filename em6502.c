@@ -53,10 +53,11 @@ int main(int argc, char *argv[])
 		{"data-pages", required_argument, 0, 'D'},
 		{"print-stack", required_argument, 0, 'S'},
 		{"print-zero-page", required_argument, 0, 'Z'},
+		{"print-code-trace", required_argument, 0, 'T'},
       {0, 0, 0, 0}
    };
 
-   while ((c = getopt_long(argc, argv, "vc:d:p:i:o:C:D:S:Z:", long_opts, &opt_idx)) != -1)
+   while ((c = getopt_long(argc, argv, "vc:d:p:i:o:C:D:S:Z:T:", long_opts, &opt_idx)) != -1)
       switch (c)
       {
 	 case 'v':
@@ -95,6 +96,9 @@ int main(int argc, char *argv[])
 		 break;
 	 case 'Z':
 		 print_zpg = atoi(optarg);
+		 break;
+	 case 'T':
+		 set_print_trace(atoi(optarg));
 		 break;
       }
 

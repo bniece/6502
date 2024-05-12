@@ -12,15 +12,27 @@
 
 #include "instructions.h"
 
+int print_trace = 1;
+
 void log_op_start(CPU *cpu, char *op, int bytes)
 {
 // Print operation address, mnemonic, and bytes consumed
+	if (print_trace == 0)
+	{
+		return;
+	}
+
 	printf("0x%04X %-9s (%d bytes) ", cpu->PC, op, bytes);
 }
 
 void log_op_end(CPU *cpu, int address, byte result, int cycles)
 // Count cycles, print operation address, result & status register
 {
+	if (print_trace == 0)
+	{
+		return;
+	}
+
 	for (cpu->TC = 0; cpu->TC < cycles; cpu->TC++)
 	{
 		printf(" .");
@@ -45,6 +57,11 @@ void log_op_end(CPU *cpu, int address, byte result, int cycles)
 			cpu->SR & Z ? 'Z' : '.', cpu->SR & C ? 'C' : '.');
 
 	printf("\n");
+}
+
+void set_print_trace(int pt)
+{
+	print_trace = pt;
 }
 
 int do_ADC_imm(CPU *cpu)

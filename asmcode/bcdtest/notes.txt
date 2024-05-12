@@ -1,0 +1,17 @@
+Timing tests:
+5/11/2024
+(using em6502 > out.txt)
+noV-abs
+MSVC: 2 min 45.828 s
+MSYS2: 40.956 s
+Debian: 38.046 s
+
+noV-zpg
+MSVC: 2 min 44.810 s
+MSYS2: 40.529 s
+Debian: 38.636 s
+
+Debian is much less consistent run-to-run.  Maybe because it is in a VM.
+I wonder if the redirected code trace is why MSVC is so much slower.  
+(Tried in a CLI Debian VM.  Slightly faster, but no more consistent.)
+I will add an option to silence that.
