@@ -12,6 +12,22 @@ MSYS2: 40.529 s
 Debian: 38.636 s
 
 Debian is much less consistent run-to-run.  Maybe because it is in a VM.
-I wonder if the redirected code trace is why MSVC is so much slower.  
 (Tried in a CLI Debian VM.  Slightly faster, but no more consistent.)
+I wonder if the redirected code trace is why MSVC is so much slower.  
 I will add an option to silence that.
+
+5/12/2024
+(using -C 0 -D 0 -S 0 -Z 0 -T 0)
+noV-abs
+MSVC: 0.731 s
+MSYS2: 0.698 s
+Debian: 2.018 s
+
+noV-abs
+MSVC: 0.673 s
+MSYS2: 0.640 s
+Debian: 1.884 s
+
+The Debian VM was still a little less consistent, but better. 
+MSVC is much improved.  Still a bit slower than the gcc version, but that
+may be because I have to run it in MSYS to time it.
