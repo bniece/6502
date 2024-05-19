@@ -5,6 +5,7 @@
 // Brian K. Niece
 
 #include "cpu.h"
+#include "instructions.h"
 #include "membus.h"
 
 #ifndef EM6502_H
@@ -16,5 +17,8 @@
 
 // Get array of instruction functions
 extern int (*execute[])(CPU *cpu);
+
+// IO functions
+void log_op(CPU *cpu, struct opreturn opr);
 
 #endif

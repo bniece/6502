@@ -17,6 +17,8 @@ int main(int argc, char *argv[])
 {
    int c, opt_idx = 0;	// getopt variables
 	int r;					// memory operation result
+	int print_log = 1;	// enable/disable code log
+	struct opreturn opr = test_op(); // operation result
 
 	// Track performance
 	int cycle_count = 0;
@@ -53,11 +55,11 @@ int main(int argc, char *argv[])
 		{"data-pages", required_argument, 0, 'D'},
 		{"print-stack", required_argument, 0, 'S'},
 		{"print-zero-page", required_argument, 0, 'Z'},
-		{"print-code-trace", required_argument, 0, 'T'},
+		{"print-code-log", required_argument, 0, 'L'},
       {0, 0, 0, 0}
    };
 
-   while ((c = getopt_long(argc, argv, "vc:d:p:i:o:C:D:S:Z:T:", long_opts, &opt_idx)) != -1)
+   while ((c = getopt_long(argc, argv, "vc:d:p:i:o:C:D:S:Z:L:", long_opts, &opt_idx)) != -1)
       switch (c)
       {
 	 case 'v':
@@ -97,8 +99,9 @@ int main(int argc, char *argv[])
 	 case 'Z':
 		 print_zpg = atoi(optarg);
 		 break;
-	 case 'T':
+	 case 'L':
 		 set_print_trace(atoi(optarg));
+		 print_log = atoi(optarg);
 		 break;
       }
 
@@ -182,6 +185,12 @@ int main(int argc, char *argv[])
 		cpu.IR = read(bus, cpu.PC);
 		cycle_count += execute[cpu.IR](&cpu);
 
+		// Log operation to stdout if enabled
+		if (print_log == 1)
+		{
+			log_op(&cpu, opr);
+		}
+		
 		// Execute peripheral code here
 		
 		// Execute IRQs here
@@ -240,3 +249,41 @@ int main(int argc, char *argv[])
    return 0;
 }
 
+void log_op(CPU *cpu, struct opreturn opr)
+{
+	printf("0x%04X %-9s ", cpu->PC - opr.bytes, opr.mnemonic);
+
+	if (opr.bytes == 1)
+	{
+		printf("(%d byte)  ", opr.bytes);
+	}
+	else
+	{
+		printf("(%d bytes) ", opr.bytes);
+	}
+
+	for (cpu->TC = 0; cpu->TC < opr.cycles; cpu->TC++)
+	{
+		printf(" .");
+	}
+	for (cpu->TC = opr.cycles - 1; cpu->TC < 7; cpu->TC++)
+	{
+		printf("  ");
+	}
+
+	if (opr.bytes == 1)
+	{
+		printf("       0x%02X", opr.result);
+	}
+	else
+	{
+		printf("0x%04X 0x%02X", opr.operand, opr.result);
+	}
+
+	printf(" %c%c%c%c%c%c%c%c", cpu->SR & N ? 'N' : '.', 
+			cpu->SR & V ? 'V' : '.', '.', cpu->SR & B ? 'B' : '.', 
+			cpu->SR & D ? 'D' : '.', cpu->SR & I ? 'I' : '.',
+			cpu->SR & Z ? 'Z' : '.', cpu->SR & C ? 'C' : '.');
+
+	printf("\n");
+}

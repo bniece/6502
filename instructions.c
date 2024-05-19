@@ -64,6 +64,21 @@ void set_print_trace(int pt)
 	print_trace = pt;
 }
 
+
+struct opreturn test_op()
+{
+	struct opreturn opr;
+
+	opr.mnemonic = "TST impl";
+	opr.bytes = 1;
+	opr.cycles = 1;
+	opr.operand = 0x0200;
+	opr.result = 0x2A;
+
+	return opr;
+}
+
+
 int do_ADC_imm(CPU *cpu)
 // Add with Carry, immediate addressing
 // 	A, C = A + M + C
@@ -1427,6 +1442,9 @@ int do_BRK_impl(CPU *cpu)
 {
 	int nbytes = 1;
 	int ncycles = 7;
+
+	// Cycle 0: instruction fetched, increment PC
+	cpu->PC++;
 
 	log_op_start(cpu, "BRK   ", nbytes);
 	log_op_end(cpu, -1, 0, ncycles);

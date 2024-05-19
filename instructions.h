@@ -10,10 +10,22 @@
 
 #include "cpu.h"
 
+// Return information structure
+struct opreturn
+{
+	char *mnemonic;
+	byte bytes;
+	byte cycles;
+	word operand;
+	byte result;
+};
+
 // Logging functions
 void log_op_start(CPU *cpu, char *op, int bytes);
 void log_op_end(CPU *cpu, int address, byte result, int cycles);
 void set_print_trace(int pt);
+
+struct opreturn test_op();
 
 // Instruction handler functions
 int do_BRK_impl(CPU *cpu);	// 0x00
