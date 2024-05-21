@@ -183,7 +183,8 @@ int main(int argc, char *argv[])
 	do 
 	{
 		cpu.IR = read(bus, cpu.PC);
-		cycle_count += execute[cpu.IR](&cpu);
+		opr = execute[cpu.IR](&cpu);
+		cycle_count += opr.cycles;
 
 		// Log operation to stdout if enabled
 		if (print_log == 1)

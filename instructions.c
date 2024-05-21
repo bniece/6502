@@ -79,14 +79,15 @@ struct opreturn test_op()
 }
 
 
-int do_ADC_imm(CPU *cpu)
+struct opreturn do_ADC_imm(CPU *cpu)
 // Add with Carry, immediate addressing
 // 	A, C = A + M + C
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "ADC # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -107,19 +108,21 @@ int do_ADC_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_abs(CPU *cpu)
+struct opreturn do_ADC_abs(CPU *cpu)
 // Add with Carry, absolute addressing
 // 	A, C = A + M + C
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "ADC abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -147,21 +150,23 @@ int do_ADC_abs(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_absX(CPU *cpu)
+struct opreturn do_ADC_absX(CPU *cpu)
 // Add with Carry, x-indexed absolute addressing
 // 	A, C = A + M + C
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "ADC absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -187,7 +192,7 @@ int do_ADC_absX(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -207,21 +212,23 @@ int do_ADC_absX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_absY(CPU *cpu)
+struct opreturn do_ADC_absY(CPU *cpu)
 // Add with Carry, y-indexed absolute addressing
 // 	A, C = A + M + C
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC absY", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "ADC absY";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -247,7 +254,7 @@ int do_ADC_absY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -267,19 +274,21 @@ int do_ADC_absY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_zpg(CPU *cpu)
+struct opreturn do_ADC_zpg(CPU *cpu)
 // Add with Carry, zero page addressing
 // 	A, C = A + M + C
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "ADC zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -303,19 +312,21 @@ int do_ADC_zpg(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_zpgX(CPU *cpu)
+struct opreturn do_ADC_zpgX(CPU *cpu)
 // Add with Carry, X indexed zero page addressing
 // 	A, C = A + M + C
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC zpg,X", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "ADC zpg,X";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -342,19 +353,21 @@ int do_ADC_zpgX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_Xind(CPU *cpu)
+struct opreturn do_ADC_Xind(CPU *cpu)
 // Add with Carry, X indexed zero page indirect addressing
 // 	A, C = A + M + C
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC X,ind", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "ADC X,ind";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -389,21 +402,23 @@ int do_ADC_Xind(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_indY(CPU *cpu)
+struct opreturn do_ADC_indY(CPU *cpu)
 // Add with Carry, zero page indirect Y indexed addressing
 // 	A, C = A + M + C
 {
-	int nbytes = 2;
-	int ncycles = 5;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC ind,Y", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "ADC ind,Y";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -430,7 +445,7 @@ int do_ADC_indY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 5:  fetch byte
 		addr = (bah << 8) + bal;
@@ -449,19 +464,21 @@ int do_ADC_indY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_AND_imm(CPU *cpu)
+struct opreturn do_AND_imm(CPU *cpu)
 // AND, immediate addressing
 // 	A = A & M
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "AND # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "AND # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -480,19 +497,21 @@ int do_AND_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_AND_abs(CPU *cpu)
+struct opreturn do_AND_abs(CPU *cpu)
 // AND, absolute addressing
 // 	A = A & M
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "AND abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "AND abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -518,21 +537,23 @@ int do_AND_abs(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_AND_absX(CPU *cpu)
+struct opreturn do_AND_absX(CPU *cpu)
 // AND, x-indexed absolute addressing
 // 	A = A & M
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "AND absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "AND absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -558,7 +579,7 @@ int do_AND_absX(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -576,21 +597,23 @@ int do_AND_absX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_AND_absY(CPU *cpu)
+struct opreturn do_AND_absY(CPU *cpu)
 // AND, y-indexed absolute addressing
 // 	A = A & M
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "AND absY", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "AND absY";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -616,7 +639,7 @@ int do_AND_absY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -634,19 +657,21 @@ int do_AND_absY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_AND_zpg(CPU *cpu)
+struct opreturn do_AND_zpg(CPU *cpu)
 // AND, zero page addressing
 // 	A = A & M
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "AND zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "AND zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -668,19 +693,21 @@ int do_AND_zpg(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_AND_zpgX(CPU *cpu)
+struct opreturn do_AND_zpgX(CPU *cpu)
 // AND, X indexed zero page addressing
 // 	A = A & M
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "AND zpg,X", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "AND zpg,X";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -705,19 +732,21 @@ int do_AND_zpgX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_AND_Xind(CPU *cpu)
+struct opreturn do_AND_Xind(CPU *cpu)
 // AND, X indexed zero page indirect addressing
 // 	A = A & M
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "AND X,ind", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "AND X,ind";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -750,21 +779,23 @@ int do_AND_Xind(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_AND_indY(CPU *cpu)
+struct opreturn do_AND_indY(CPU *cpu)
 // AND, zero page indirect Y indexed addressing
 // 	A = A & M
 {
-	int nbytes = 2;
-	int ncycles = 5;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "AND ind,Y", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "AND ind,Y";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -791,7 +822,7 @@ int do_AND_indY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 5:  fetch byte
 		addr = (bah << 8) + bal;
@@ -808,18 +839,20 @@ int do_AND_indY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ASL_A(CPU *cpu)
+struct opreturn do_ASL_A(CPU *cpu)
 // Arithmetic shift left accumulator
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ASL A ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "ASL A ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -839,18 +872,20 @@ int do_ASL_A(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ASL_abs(CPU *cpu)
+struct opreturn do_ASL_abs(CPU *cpu)
 // Arithmetic shift left absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ASL abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 6;
+	opr.mnemonic = "ASL abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -884,18 +919,20 @@ int do_ASL_abs(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ASL_absX(CPU *cpu)
+struct opreturn do_ASL_absX(CPU *cpu)
 // Arithmetic shift left x-indexed absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 7;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ASL absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 7;
+	opr.mnemonic = "ASL absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -940,18 +977,20 @@ int do_ASL_absX(CPU *cpu)
 	// Cycle 6: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ASL_zpg(CPU *cpu)
+struct opreturn do_ASL_zpg(CPU *cpu)
 // Arithmetic shift left zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 5;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ASL zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "ASL zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -981,18 +1020,20 @@ int do_ASL_zpg(CPU *cpu)
 	// Cycle 4: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ASL_zpgX(CPU *cpu)
+struct opreturn do_ASL_zpgX(CPU *cpu)
 // Arithmetic shift left x-indexed zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ASL zpgX", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "ASL zpgX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1025,18 +1066,20 @@ int do_ASL_zpgX(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_BCC_rel(CPU *cpu)
+struct opreturn do_BCC_rel(CPU *cpu)
 // Branch on carry clear
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "BCC rel", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "BCC rel";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1049,7 +1092,7 @@ int do_BCC_rel(CPU *cpu)
 	//		Branch adds 1 cycle		
 	if ((cpu->SR & C) == 0)
 	{
-		ncycles += 1;
+		opr.cycles += 1;
 
 		int ADL = (cpu->PC & 0xFF) + M;
 		int ADH = (cpu->PC & 0xFF00)>>8;
@@ -1059,7 +1102,7 @@ int do_BCC_rel(CPU *cpu)
 		//		Page crossed when (carry XOR sign of M) is true
 		if ((ADL & bit8)>>8 != (M & N)>>7)
 		{
-			ncycles += 1;
+			opr.cycles += 1;
 
 			// Increment ADH if carry is set
 			if ((ADL & bit8) != 0)
@@ -1079,18 +1122,20 @@ int do_BCC_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, -1, M, ncycles);
+	opr.operand = -1;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_BCS_rel(CPU *cpu)
+struct opreturn do_BCS_rel(CPU *cpu)
 // Branch on carry set
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "BCS rel", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "BCS rel";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1103,7 +1148,7 @@ int do_BCS_rel(CPU *cpu)
 	//		Branch adds 1 cycle		
 	if ((cpu->SR & C) == C)
 	{
-		ncycles += 1;
+		opr.cycles += 1;
 
 		int ADL = (cpu->PC & 0xFF) + M;
 		int ADH = (cpu->PC & 0xFF00)>>8;
@@ -1113,7 +1158,7 @@ int do_BCS_rel(CPU *cpu)
 		//		Page crossed when (carry XOR sign of M) is true
 		if ((ADL & bit8)>>8 != (M & N)>>7)
 		{
-			ncycles += 1;
+			opr.cycles += 1;
 
 			// Increment ADH if carry is set
 			if ((ADL & bit8) != 0)
@@ -1133,18 +1178,20 @@ int do_BCS_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, -1, M, ncycles);
+	opr.operand = -1;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_BEQ_rel(CPU *cpu)
+struct opreturn do_BEQ_rel(CPU *cpu)
 // Branch on result equal to zero
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "BEQ rel", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "BEQ rel";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1157,7 +1204,7 @@ int do_BEQ_rel(CPU *cpu)
 	//		Branch adds 1 cycle		
 	if ((cpu->SR & Z) == Z)
 	{
-		ncycles += 1;
+		opr.cycles += 1;
 
 		int ADL = (cpu->PC & 0xFF) + M;
 		int ADH = (cpu->PC & 0xFF00)>>8;
@@ -1167,7 +1214,7 @@ int do_BEQ_rel(CPU *cpu)
 		//		Page crossed when (carry XOR sign of M) is true
 		if ((ADL & bit8)>>8 != (M & N)>>7)
 		{
-			ncycles += 1;
+			opr.cycles += 1;
 
 			// Increment ADH if carry is set
 			if ((ADL & bit8) != 0)
@@ -1187,19 +1234,21 @@ int do_BEQ_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, -1, M, ncycles);
+	opr.operand = -1;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_BIT_abs(CPU *cpu)
+struct opreturn do_BIT_abs(CPU *cpu)
 // BIT, absolute addressing
 // 	N, V from M, Z from M & A
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "BIT abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "BIT abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1230,19 +1279,21 @@ int do_BIT_abs(CPU *cpu)
 	}
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_BIT_zpg(CPU *cpu)
+struct opreturn do_BIT_zpg(CPU *cpu)
 // BIT, zero page addressing
 // 	N, V from M, Z from M & A
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "BIT zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "BIT zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1269,18 +1320,20 @@ int do_BIT_zpg(CPU *cpu)
 	}
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_BMI_rel(CPU *cpu)
+struct opreturn do_BMI_rel(CPU *cpu)
 // Branch on result minus
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "BMI rel", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "BMI rel";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1293,7 +1346,7 @@ int do_BMI_rel(CPU *cpu)
 	//		Branch adds 1 cycle		
 	if ((cpu->SR & N) == N)
 	{
-		ncycles += 1;
+		opr.cycles += 1;
 
 		int ADL = (cpu->PC & 0xFF) + M;
 		int ADH = (cpu->PC & 0xFF00)>>8;
@@ -1303,7 +1356,7 @@ int do_BMI_rel(CPU *cpu)
 		//		Page crossed when (carry XOR sign of M) is true
 		if ((ADL & bit8)>>8 != (M & N)>>7)
 		{
-			ncycles += 1;
+			opr.cycles += 1;
 
 			// Increment ADH if carry is set
 			if ((ADL & bit8) != 0)
@@ -1323,18 +1376,20 @@ int do_BMI_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, -1, M, ncycles);
+	opr.operand = -1;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_BNE_rel(CPU *cpu)
+struct opreturn do_BNE_rel(CPU *cpu)
 // Branch on result not zero
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "BNE rel", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "BNE rel";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1347,7 +1402,7 @@ int do_BNE_rel(CPU *cpu)
 	//		Branch adds 1 cycle		
 	if ((cpu->SR & Z) == 0)
 	{
-		ncycles += 1;
+		opr.cycles += 1;
 
 		int ADL = (cpu->PC & 0xFF) + M;
 		int ADH = (cpu->PC & 0xFF00)>>8;
@@ -1357,7 +1412,7 @@ int do_BNE_rel(CPU *cpu)
 		//		Page crossed when (carry XOR sign of M) is true
 		if ((ADL & bit8)>>8 != (M & N)>>7)
 		{
-			ncycles += 1;
+			opr.cycles += 1;
 
 			// Increment ADH if carry is set
 			if ((ADL & bit8) != 0)
@@ -1377,18 +1432,20 @@ int do_BNE_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, -1, M, ncycles);
+	opr.operand = -1;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_BPL_rel(CPU *cpu)
+struct opreturn do_BPL_rel(CPU *cpu)
 // Branch on result plus
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "BPL rel", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "BPL rel";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1401,7 +1458,7 @@ int do_BPL_rel(CPU *cpu)
 	//		Branch adds 1 cycle		
 	if ((cpu->SR & N) == 0)
 	{
-		ncycles += 1;
+		opr.cycles += 1;
 
 		int ADL = (cpu->PC & 0xFF) + M;
 		int ADH = (cpu->PC & 0xFF00)>>8;
@@ -1411,7 +1468,7 @@ int do_BPL_rel(CPU *cpu)
 		//		Page crossed when (carry XOR sign of M) is true
 		if ((ADL & bit8)>>8 != (M & N)>>7)
 		{
-			ncycles += 1;
+			opr.cycles += 1;
 
 			// Increment ADH if carry is set
 			if ((ADL & bit8) != 0)
@@ -1431,34 +1488,39 @@ int do_BPL_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, -1, M, ncycles);
+	opr.operand = -1;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_BRK_impl(CPU *cpu)
+struct opreturn do_BRK_impl(CPU *cpu)
 // This is not a correct implementation of this instruction.  It's
 // just a convenient way to end programs
 {
-	int nbytes = 1;
-	int ncycles = 7;
+	struct opreturn opr;
+
+	opr.bytes = 1;
+	opr.cycles = 7;
+	opr.mnemonic = "BRK   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
 
-	log_op_start(cpu, "BRK   ", nbytes);
-	log_op_end(cpu, -1, 0, ncycles);
+	opr.operand = -1;
+	opr.result = 0;
 
-	return ncycles;
+	return opr;
 }
 
-int do_BVC_rel(CPU *cpu)
+struct opreturn do_BVC_rel(CPU *cpu)
 // Branch on overflow clear
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "BVC rel", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "BVC rel";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1471,7 +1533,7 @@ int do_BVC_rel(CPU *cpu)
 	//		Branch adds 1 cycle		
 	if ((cpu->SR & V) == 0)
 	{
-		ncycles += 1;
+		opr.cycles += 1;
 
 		int ADL = (cpu->PC & 0xFF) + M;
 		int ADH = (cpu->PC & 0xFF00)>>8;
@@ -1481,7 +1543,7 @@ int do_BVC_rel(CPU *cpu)
 		//		Page crossed when (carry XOR sign of M) is true
 		if ((ADL & bit8)>>8 != (M & N)>>7)
 		{
-			ncycles += 1;
+			opr.cycles += 1;
 
 			// Increment ADH if carry is set
 			if ((ADL & bit8) != 0)
@@ -1501,18 +1563,20 @@ int do_BVC_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, -1, M, ncycles);
+	opr.operand = -1;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_BVS_rel(CPU *cpu)
+struct opreturn do_BVS_rel(CPU *cpu)
 // Branch on overflow set
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "BVS rel", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "BVS rel";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1525,7 +1589,7 @@ int do_BVS_rel(CPU *cpu)
 	//		Branch adds 1 cycle		
 	if ((cpu->SR & V) == V)
 	{
-		ncycles += 1;
+		opr.cycles += 1;
 
 		int ADL = (cpu->PC & 0xFF) + M;
 		int ADH = (cpu->PC & 0xFF00)>>8;
@@ -1535,7 +1599,7 @@ int do_BVS_rel(CPU *cpu)
 		//		Page crossed when (carry XOR sign of M) is true
 		if ((ADL & bit8)>>8 != (M & N)>>7)
 		{
-			ncycles += 1;
+			opr.cycles += 1;
 
 			// Increment ADH if carry is set
 			if ((ADL & bit8) != 0)
@@ -1555,18 +1619,20 @@ int do_BVS_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	log_op_end(cpu, -1, M, ncycles);
+	opr.operand = -1;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CLC_impl(CPU *cpu)
+struct opreturn do_CLC_impl(CPU *cpu)
 // Clear Carry flag
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CLC   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "CLC   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1574,18 +1640,20 @@ int do_CLC_impl(CPU *cpu)
 	// Cycle 1: Clear C
 	cpu->SR &= ~C;
 
-	log_op_end(cpu, -1, cpu->SR, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->SR;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CLI_impl(CPU *cpu)
+struct opreturn do_CLI_impl(CPU *cpu)
 // Clear interrupt disable
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CLI   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "CLI   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1593,20 +1661,22 @@ int do_CLI_impl(CPU *cpu)
 	// Cycle 1: Clear I
 	cpu->SR &= ~I;
 
-	log_op_end(cpu, -1, cpu->SR, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->SR;
 
-	return ncycles;
+	return opr;
 }
 
 // CLD is below the execute array assignments
 
-int do_CLV_impl(CPU *cpu)
+struct opreturn do_CLV_impl(CPU *cpu)
 // Clear Overflow flag
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CLV   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "CLV   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1614,19 +1684,21 @@ int do_CLV_impl(CPU *cpu)
 	// Cycle 1: Clear V
 	cpu->SR &= ~V;
 
-	log_op_end(cpu, -1, cpu->SR, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->SR;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CMP_imm(CPU *cpu)
+struct opreturn do_CMP_imm(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = A + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CMP # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "CMP # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1646,19 +1718,21 @@ int do_CMP_imm(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CMP_abs(CPU *cpu)
+struct opreturn do_CMP_abs(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = A + ~M + C
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CMP abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "CMP abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1685,21 +1759,23 @@ int do_CMP_abs(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CMP_absX(CPU *cpu)
+struct opreturn do_CMP_absX(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = A + ~M + C
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "CMP absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "CMP absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1725,7 +1801,7 @@ int do_CMP_absX(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -1743,21 +1819,23 @@ int do_CMP_absX(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CMP_absY(CPU *cpu)
+struct opreturn do_CMP_absY(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = A + ~M + C
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "CMP absY", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "CMP absY";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1783,7 +1861,7 @@ int do_CMP_absY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -1801,19 +1879,21 @@ int do_CMP_absY(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CMP_zpg(CPU *cpu)
+struct opreturn do_CMP_zpg(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = A + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CMP zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "CMP zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1836,19 +1916,21 @@ int do_CMP_zpg(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CMP_zpgX(CPU *cpu)
+struct opreturn do_CMP_zpgX(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = A + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CMP zpgX", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "CMP zpgX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1874,19 +1956,21 @@ int do_CMP_zpgX(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CMP_Xind(CPU *cpu)
+struct opreturn do_CMP_Xind(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = A + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CMP Xind", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "CMP Xind";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1920,21 +2004,23 @@ int do_CMP_Xind(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CMP_indY(CPU *cpu)
+struct opreturn do_CMP_indY(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = A + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 5;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "CMP indY", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "CMP indY";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -1961,7 +2047,7 @@ int do_CMP_indY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 5:  fetch byte
 		addr = (bah << 8) + bal;
@@ -1979,19 +2065,21 @@ int do_CMP_indY(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CPX_imm(CPU *cpu)
+struct opreturn do_CPX_imm(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = X + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CPX # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "CPX # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2011,19 +2099,21 @@ int do_CPX_imm(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, -1, cpu->X, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CPX_abs(CPU *cpu)
+struct opreturn do_CPX_abs(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = X + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CPX abs", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "CPX abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2050,19 +2140,21 @@ int do_CPX_abs(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->X, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CPX_zpg(CPU *cpu)
+struct opreturn do_CPX_zpg(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = X + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CPX zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "CPX zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2085,19 +2177,21 @@ int do_CPX_zpg(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->X, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CPY_imm(CPU *cpu)
+struct opreturn do_CPY_imm(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = Y + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CPY # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "CPY # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2117,19 +2211,21 @@ int do_CPY_imm(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, -1, cpu->Y, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->Y;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CPY_abs(CPU *cpu)
+struct opreturn do_CPY_abs(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = Y + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CPY abs", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "CPY abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2156,19 +2252,21 @@ int do_CPY_abs(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->Y, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->Y;
 
-	return ncycles;
+	return opr;
 }
 
-int do_CPY_zpg(CPU *cpu)
+struct opreturn do_CPY_zpg(CPU *cpu)
 // Subtract but don't update A, set Z, C, N
 // 	Z,C,N = Y + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CPY zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "CPY zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2191,18 +2289,20 @@ int do_CPY_zpg(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->X, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_DEC_abs(CPU *cpu)
+struct opreturn do_DEC_abs(CPU *cpu)
 // Decrement memory
 {
-	int nbytes = 3;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "DEC abs ", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 6;
+	opr.mnemonic = "DEC abs ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2228,18 +2328,20 @@ int do_DEC_abs(CPU *cpu)
 	// Cycle 5: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_DEC_absX(CPU *cpu)
+struct opreturn do_DEC_absX(CPU *cpu)
 // Decrement memory
 {
-	int nbytes = 3;
-	int ncycles = 7;
+	struct opreturn opr;
 
-	log_op_start(cpu, "DEC absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 7;
+	opr.mnemonic = "DEC absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2276,18 +2378,20 @@ int do_DEC_absX(CPU *cpu)
 	// Cycle 6: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_DEC_zpg(CPU *cpu)
+struct opreturn do_DEC_zpg(CPU *cpu)
 // Decrement memory
 {
-	int nbytes = 2;
-	int ncycles = 5;
+	struct opreturn opr;
 
-	log_op_start(cpu, "DEC zpg ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "DEC zpg ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2309,18 +2413,20 @@ int do_DEC_zpg(CPU *cpu)
 	// Cycle 4: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_DEC_zpgX(CPU *cpu)
+struct opreturn do_DEC_zpgX(CPU *cpu)
 // Decrement memory
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "DEC zpgX", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "DEC zpgX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2345,19 +2451,21 @@ int do_DEC_zpgX(CPU *cpu)
 	// Cycle 5: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_EOR_imm(CPU *cpu)
+struct opreturn do_EOR_imm(CPU *cpu)
 // XOR, immediate addressing
 // 	A = A ^ M
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "EOR # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "EOR # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2376,19 +2484,21 @@ int do_EOR_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_EOR_abs(CPU *cpu)
+struct opreturn do_EOR_abs(CPU *cpu)
 // XOR, absolute addressing
 // 	A = A ^ M
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "EOR abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "EOR abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2414,21 +2524,23 @@ int do_EOR_abs(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_EOR_absX(CPU *cpu)
+struct opreturn do_EOR_absX(CPU *cpu)
 // XOR, x-indexed absolute addressing
 // 	A = A ^ M
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "EOR absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "EOR absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2454,7 +2566,7 @@ int do_EOR_absX(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -2472,21 +2584,23 @@ int do_EOR_absX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_EOR_absY(CPU *cpu)
+struct opreturn do_EOR_absY(CPU *cpu)
 // XOR, y-indexed absolute addressing
 // 	A = A ^ M
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "EOR absY", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "EOR absY";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2512,7 +2626,7 @@ int do_EOR_absY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -2530,19 +2644,21 @@ int do_EOR_absY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_EOR_zpg(CPU *cpu)
+struct opreturn do_EOR_zpg(CPU *cpu)
 // XOR, zero page addressing
 // 	A = A ^ M
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "EOR zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "EOR zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2564,19 +2680,21 @@ int do_EOR_zpg(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_EOR_zpgX(CPU *cpu)
+struct opreturn do_EOR_zpgX(CPU *cpu)
 // XOR, X indexed zero page addressing
 // 	A = A ^ M
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "EOR zpg,X", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "EOR zpg,X";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2601,19 +2719,21 @@ int do_EOR_zpgX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_EOR_Xind(CPU *cpu)
+struct opreturn do_EOR_Xind(CPU *cpu)
 // XOR, X indexed zero page indirect addressing
 // 	A = A ^ M
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "EOR X,ind", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "EOR X,ind";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2646,21 +2766,23 @@ int do_EOR_Xind(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_EOR_indY(CPU *cpu)
+struct opreturn do_EOR_indY(CPU *cpu)
 // XOR, zero page indirect Y indexed addressing
 // 	A = A ^ M
 {
-	int nbytes = 2;
-	int ncycles = 5;
 	word addr;
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "EOR ind,Y", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "EOR ind,Y";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2687,7 +2809,7 @@ int do_EOR_indY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 5:  fetch byte
 		addr = (bah << 8) + bal;
@@ -2704,18 +2826,20 @@ int do_EOR_indY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_INC_abs(CPU *cpu)
+struct opreturn do_INC_abs(CPU *cpu)
 // Increment memory
 {
-	int nbytes = 3;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "INC abs ", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 6;
+	opr.mnemonic = "INC abs ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2741,18 +2865,20 @@ int do_INC_abs(CPU *cpu)
 	// Cycle 5: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_INC_absX(CPU *cpu)
+struct opreturn do_INC_absX(CPU *cpu)
 // Increment memory
 {
-	int nbytes = 3;
-	int ncycles = 7;
+	struct opreturn opr;
 
-	log_op_start(cpu, "INC absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 7;
+	opr.mnemonic = "INC absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2789,18 +2915,20 @@ int do_INC_absX(CPU *cpu)
 	// Cycle 6: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_INC_zpg(CPU *cpu)
+struct opreturn do_INC_zpg(CPU *cpu)
 // Increment memory
 {
-	int nbytes = 2;
-	int ncycles = 5;
+	struct opreturn opr;
 
-	log_op_start(cpu, "INC zpg ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "INC zpg ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2822,18 +2950,20 @@ int do_INC_zpg(CPU *cpu)
 	// Cycle 4: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_INC_zpgX(CPU *cpu)
+struct opreturn do_INC_zpgX(CPU *cpu)
 // Increment memory
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "INC zpgX", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "INC zpgX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2858,18 +2988,20 @@ int do_INC_zpgX(CPU *cpu)
 	// Cycle 5: Store byte back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_DEX_impl(CPU *cpu)
+struct opreturn do_DEX_impl(CPU *cpu)
 // Decrement X register
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "DEX   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "DEX   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2881,18 +3013,20 @@ int do_DEX_impl(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, -1, cpu->X, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_DEY_impl(CPU *cpu)
+struct opreturn do_DEY_impl(CPU *cpu)
 // Decrement Y register
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "DEY   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "DEY   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2904,18 +3038,20 @@ int do_DEY_impl(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, -1, cpu->Y, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->Y;
 
-	return ncycles;
+	return opr;
 }
 
-int do_INX_impl(CPU *cpu)
+struct opreturn do_INX_impl(CPU *cpu)
 // Increment X register
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "INX   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "INX   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2927,18 +3063,20 @@ int do_INX_impl(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, -1, cpu->X, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_INY_impl(CPU *cpu)
+struct opreturn do_INY_impl(CPU *cpu)
 // Increment Y register
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "INY   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "INY   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2950,18 +3088,20 @@ int do_INY_impl(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, -1, cpu->Y, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->Y;
 
-	return ncycles;
+	return opr;
 }
 
-int do_JMP_abs(CPU *cpu)
+struct opreturn do_JMP_abs(CPU *cpu)
 // Jump with absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "JMP abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 3;
+	opr.mnemonic = "JMP abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -2977,18 +3117,20 @@ int do_JMP_abs(CPU *cpu)
 	cpu->PC++;
 	cpu->PC = addr;
 
-	log_op_end(cpu, addr, adl, ncycles);
+	opr.operand = addr;
+	opr.result = adl;
 
-	return ncycles;
+	return opr;
 }
 
-int do_JMP_ind(CPU *cpu)
+struct opreturn do_JMP_ind(CPU *cpu)
 // Jump with absolute indirect addressing
 {
-	int nbytes = 3;
-	int ncycles = 5;
+	struct opreturn opr;
 
-	log_op_start(cpu, "JMP ind", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 5;
+	opr.mnemonic = "JMP ind";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3013,18 +3155,20 @@ int do_JMP_ind(CPU *cpu)
 	word addr = adl + (adh << 8);
 	cpu->PC = addr;
 
-	log_op_end(cpu, addr, adl, ncycles);
+	opr.operand = addr;
+	opr.result = adl;
 
-	return ncycles;
+	return opr;
 }
 
-int do_JSR_abs(CPU *cpu)
+struct opreturn do_JSR_abs(CPU *cpu)
 // Jump to subroutine with absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "JSR abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 6;
+	opr.mnemonic = "JSR abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3050,19 +3194,21 @@ int do_JSR_abs(CPU *cpu)
 	// Cycle 5:  Set PC for jump
 	cpu->PC = addr;
 
-	log_op_end(cpu, addr, adl, ncycles);
+	opr.operand = addr;
+	opr.result = adl;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ORA_imm(CPU *cpu)
+struct opreturn do_ORA_imm(CPU *cpu)
 // OR, immediate addressing
 // 	A = A | M
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ORA # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "ORA # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3081,19 +3227,21 @@ int do_ORA_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ORA_abs(CPU *cpu)
+struct opreturn do_ORA_abs(CPU *cpu)
 // OR, absolute addressing
 // 	A = A | M
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ORA abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "ORA abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3119,21 +3267,23 @@ int do_ORA_abs(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ORA_absX(CPU *cpu)
+struct opreturn do_ORA_absX(CPU *cpu)
 // OR, x-indexed absolute addressing
 // 	A = A | M
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "ORA absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "ORA absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3159,7 +3309,7 @@ int do_ORA_absX(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -3177,21 +3327,23 @@ int do_ORA_absX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ORA_absY(CPU *cpu)
+struct opreturn do_ORA_absY(CPU *cpu)
 // OR, y-indexed absolute addressing
 // 	A = A | M
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "ORA absY", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "ORA absY";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3217,7 +3369,7 @@ int do_ORA_absY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -3235,19 +3387,21 @@ int do_ORA_absY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ORA_zpg(CPU *cpu)
+struct opreturn do_ORA_zpg(CPU *cpu)
 // OR, zero page addressing
 // 	A = A | M
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ORA zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "ORA zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3269,19 +3423,21 @@ int do_ORA_zpg(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ORA_zpgX(CPU *cpu)
+struct opreturn do_ORA_zpgX(CPU *cpu)
 // OR, X indexed zero page addressing
 // 	A = A | M
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ORA zpg,X", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "ORA zpg,X";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3306,19 +3462,21 @@ int do_ORA_zpgX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ORA_Xind(CPU *cpu)
+struct opreturn do_ORA_Xind(CPU *cpu)
 // OR, X indexed zero page indirect addressing
 // 	A = A | M
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ORA X,ind", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "ORA X,ind";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3351,21 +3509,23 @@ int do_ORA_Xind(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ORA_indY(CPU *cpu)
+struct opreturn do_ORA_indY(CPU *cpu)
 // OR, zero page indirect Y indexed addressing
 // 	A = A | M
 {
-	int nbytes = 2;
-	int ncycles = 5;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "ORA ind,Y", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "ORA ind,Y";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3392,7 +3552,7 @@ int do_ORA_indY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 5:  fetch byte
 		addr = (bah << 8) + bal;
@@ -3409,18 +3569,20 @@ int do_ORA_indY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_PHA_impl(CPU *cpu)
+struct opreturn do_PHA_impl(CPU *cpu)
 // Push accumulator on stack
 {
-	int nbytes = 1;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "PHA   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 3;
+	opr.mnemonic = "PHA   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3431,18 +3593,20 @@ int do_PHA_impl(CPU *cpu)
 	// Cycle 2: Decrement stack pointer
 	cpu->SP--;
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_PHP_impl(CPU *cpu)
+struct opreturn do_PHP_impl(CPU *cpu)
 // Push processor status on stack
 {
-	int nbytes = 1;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "PHP   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 3;
+	opr.mnemonic = "PHP   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3453,18 +3617,20 @@ int do_PHP_impl(CPU *cpu)
 	// Cycle 2: Decrement stack pointer
 	cpu->SP--;
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_PLA_impl(CPU *cpu)
+struct opreturn do_PLA_impl(CPU *cpu)
 // Pull accumulator from stack
 {
-	int nbytes = 1;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "PLA   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 4;
+	opr.mnemonic = "PLA   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3479,18 +3645,20 @@ int do_PLA_impl(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_PLP_impl(CPU *cpu)
+struct opreturn do_PLP_impl(CPU *cpu)
 // Pull processor status from stack
 {
-	int nbytes = 1;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "PLP   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 4;
+	opr.mnemonic = "PLP   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3503,18 +3671,20 @@ int do_PLP_impl(CPU *cpu)
 
 	// Cycle 3: Not sure what happens here.  Flags should be set
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDA_imm(CPU *cpu)
+struct opreturn do_LDA_imm(CPU *cpu)
 // Load Accumulator with immediate addressing
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDA # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "LDA # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3527,18 +3697,20 @@ int do_LDA_imm(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDA_abs(CPU *cpu)
+struct opreturn do_LDA_abs(CPU *cpu)
 // Load Accumulator with absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDA abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "LDA abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3558,19 +3730,21 @@ int do_LDA_abs(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDA_absX(CPU *cpu)
+struct opreturn do_LDA_absX(CPU *cpu)
 // Load Accumulator with x-indexed absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr; 				// Memory location
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDA absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "LDA absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3596,7 +3770,7 @@ int do_LDA_absX(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4:  store byte in A
 		addr = (bah << 8) + bal;
@@ -3607,19 +3781,21 @@ int do_LDA_absX(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDA_absY(CPU *cpu)
+struct opreturn do_LDA_absY(CPU *cpu)
 // Load Accumulator with Y-indexed absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;				// Memory location
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDA absY", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "LDA absY";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3645,7 +3821,7 @@ int do_LDA_absY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4:  store byte in A
 		addr = (bah << 8) + bal;
@@ -3656,18 +3832,20 @@ int do_LDA_absY(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDA_zpg(CPU *cpu)
+struct opreturn do_LDA_zpg(CPU *cpu)
 // Load Accumulator with zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDA zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "LDA zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3683,18 +3861,20 @@ int do_LDA_zpg(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDA_zpgX(CPU *cpu)
+struct opreturn do_LDA_zpgX(CPU *cpu)
 // Load Accumulator with X-indexed zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDA zpg,X", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "LDA zpg,X";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3713,18 +3893,20 @@ int do_LDA_zpgX(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDA_Xind(CPU *cpu)
+struct opreturn do_LDA_Xind(CPU *cpu)
 // Load Accumulator with X-indexed zero page indirect addressing
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDA X,ind", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "LDA X,ind";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3751,19 +3933,21 @@ int do_LDA_Xind(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDA_indY(CPU *cpu)
+struct opreturn do_LDA_indY(CPU *cpu)
 // Load Accumulator with zero page indirect Y-indexed addressing
 {
-	int nbytes = 2;
-	int ncycles = 5;
 	word addr;				// Memory location
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDA ind,Y", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "LDA ind,Y";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3790,7 +3974,7 @@ int do_LDA_indY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4:  store byte in A
 		addr = (bah << 8) + bal;
@@ -3801,18 +3985,20 @@ int do_LDA_indY(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDX_imm(CPU *cpu)
+struct opreturn do_LDX_imm(CPU *cpu)
 // Load X register with immediate addressing
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDX # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "LDX # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3825,18 +4011,20 @@ int do_LDX_imm(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, -1, cpu->X, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDX_abs(CPU *cpu)
+struct opreturn do_LDX_abs(CPU *cpu)
 // Load X register with absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDX abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "LDX abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3856,19 +4044,21 @@ int do_LDX_abs(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, addr, cpu->X, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDX_absY(CPU *cpu)
+struct opreturn do_LDX_absY(CPU *cpu)
 // Load X register with Y-indexed absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;				// Memory location
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDX absY", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "LDX absY";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3894,7 +4084,7 @@ int do_LDX_absY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4:  store byte in X
 		addr = (bah << 8) + bal;
@@ -3905,18 +4095,20 @@ int do_LDX_absY(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, addr, cpu->X, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDX_zpg(CPU *cpu)
+struct opreturn do_LDX_zpg(CPU *cpu)
 // Load X register with zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDX zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "LDX zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3932,18 +4124,20 @@ int do_LDX_zpg(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, addr, cpu->X, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDX_zpgY(CPU *cpu)
+struct opreturn do_LDX_zpgY(CPU *cpu)
 // Load X register with Y-indexed zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDX zpg,Y", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "LDX zpg,Y";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3962,18 +4156,20 @@ int do_LDX_zpgY(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, addr, cpu->X, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDY_imm(CPU *cpu)
+struct opreturn do_LDY_imm(CPU *cpu)
 // Load Y register with immediate addressing
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDY # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "LDY # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -3986,18 +4182,20 @@ int do_LDY_imm(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, -1, cpu->Y, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->Y;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDY_abs(CPU *cpu)
+struct opreturn do_LDY_abs(CPU *cpu)
 // Load Y register with absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDY abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "LDY abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4017,19 +4215,21 @@ int do_LDY_abs(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, addr, cpu->Y, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->Y;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDY_absX(CPU *cpu)
+struct opreturn do_LDY_absX(CPU *cpu)
 // Load Y register with X-indexed absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;				// Memory location
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDY absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "LDY absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4055,7 +4255,7 @@ int do_LDY_absX(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4:  store byte in Y
 		addr = (bah << 8) + bal;
@@ -4066,18 +4266,20 @@ int do_LDY_absX(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, addr, cpu->Y, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->Y;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDY_zpg(CPU *cpu)
+struct opreturn do_LDY_zpg(CPU *cpu)
 // Load Y register with zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDY zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "LDY zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4093,18 +4295,20 @@ int do_LDY_zpg(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, addr, cpu->Y, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->Y;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LDY_zpgX(CPU *cpu)
+struct opreturn do_LDY_zpgX(CPU *cpu)
 // Load Y register with X-indexed zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LDY zpg,X", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "LDY zpg,X";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4123,18 +4327,20 @@ int do_LDY_zpgX(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, addr, cpu->Y, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->Y;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LSR_A(CPU *cpu)
+struct opreturn do_LSR_A(CPU *cpu)
 // Logical shift right accumulator
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LSR A ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "LSR A ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4155,18 +4361,20 @@ int do_LSR_A(CPU *cpu)
 	//   Set Z if necessary
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LSR_abs(CPU *cpu)
+struct opreturn do_LSR_abs(CPU *cpu)
 // Logical shift right absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LSR abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 6;
+	opr.mnemonic = "LSR abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4201,18 +4409,20 @@ int do_LSR_abs(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LSR_absX(CPU *cpu)
+struct opreturn do_LSR_absX(CPU *cpu)
 // Logical shift rigth x-indexed absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 7;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LSR absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 7;
+	opr.mnemonic = "LSR absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4258,18 +4468,20 @@ int do_LSR_absX(CPU *cpu)
 	// Cycle 6: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LSR_zpg(CPU *cpu)
+struct opreturn do_LSR_zpg(CPU *cpu)
 // Logical shift right zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 5;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LSR zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "LSR zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4300,18 +4512,20 @@ int do_LSR_zpg(CPU *cpu)
 	// Cycle 4: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_LSR_zpgX(CPU *cpu)
+struct opreturn do_LSR_zpgX(CPU *cpu)
 // Logical shift right x-indexed zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "LSR zpgX", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "LSR zpgX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4345,36 +4559,40 @@ int do_LSR_zpgX(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_NOP_impl(CPU *cpu)
+struct opreturn do_NOP_impl(CPU *cpu)
 // No operation
 {
-	int nbytes = 1;
-	int ncycles = 2;
-	
-	log_op_start(cpu, "NOP   ", nbytes);
+	struct opreturn opr;
+
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "NOP   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
 
 	// Cycle 1: Do nothing
 	
-	log_op_end(cpu, -1, 0, ncycles);
+	opr.operand = -1;
+	opr.result = 0;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ROL_A(CPU *cpu)
+struct opreturn do_ROL_A(CPU *cpu)
 // Rotate left accumulator
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ROL A ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "ROL A ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4397,18 +4615,20 @@ int do_ROL_A(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ROL_abs(CPU *cpu)
+struct opreturn do_ROL_abs(CPU *cpu)
 // Rotate left absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ROL abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 6;
+	opr.mnemonic = "ROL abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4445,18 +4665,20 @@ int do_ROL_abs(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ROL_absX(CPU *cpu)
+struct opreturn do_ROL_absX(CPU *cpu)
 // Rotate left x-indexed absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 7;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ROL absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 7;
+	opr.mnemonic = "ROL absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4504,18 +4726,20 @@ int do_ROL_absX(CPU *cpu)
 	// Cycle 6: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ROL_zpg(CPU *cpu)
+struct opreturn do_ROL_zpg(CPU *cpu)
 // Rotate left zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 5;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ROL zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "ROL zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4548,18 +4772,20 @@ int do_ROL_zpg(CPU *cpu)
 	// Cycle 4: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ROL_zpgX(CPU *cpu)
+struct opreturn do_ROL_zpgX(CPU *cpu)
 // Rotate left x-indexed zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ROL zpgX", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "ROL zpgX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4595,18 +4821,20 @@ int do_ROL_zpgX(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ROR_A(CPU *cpu)
+struct opreturn do_ROR_A(CPU *cpu)
 // Rotate right accumulator
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ROR A ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "ROR A ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4629,18 +4857,20 @@ int do_ROR_A(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ROR_abs(CPU *cpu)
+struct opreturn do_ROR_abs(CPU *cpu)
 // Rotate right absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ROR abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 6;
+	opr.mnemonic = "ROR abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4677,18 +4907,20 @@ int do_ROR_abs(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ROR_absX(CPU *cpu)
+struct opreturn do_ROR_absX(CPU *cpu)
 // Rotate right x-indexed absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 7;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ROR absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 7;
+	opr.mnemonic = "ROR absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4736,18 +4968,20 @@ int do_ROR_absX(CPU *cpu)
 	// Cycle 6: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ROR_zpg(CPU *cpu)
+struct opreturn do_ROR_zpg(CPU *cpu)
 // Rotate right zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 5;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ROR zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "ROR zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4780,18 +5014,20 @@ int do_ROR_zpg(CPU *cpu)
 	// Cycle 4: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ROR_zpgX(CPU *cpu)
+struct opreturn do_ROR_zpgX(CPU *cpu)
 // Rotate right x-indexed zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ROR zpgX", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "ROR zpgX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4827,17 +5063,19 @@ int do_ROR_zpgX(CPU *cpu)
 	// Cycle 5: Store back in memory
 	write(*cpu->bus, addr, M);
 
-	log_op_end(cpu, addr, M, ncycles);
+	opr.operand = addr;
+	opr.result = M;
 
-	return ncycles;
+	return opr;
 }
-int do_RTI_impl(CPU *cpu)
+struct opreturn do_RTI_impl(CPU *cpu)
 // Return from interupt with implied addressing
 {
-	int nbytes = 1;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "RTI impl", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 6;
+	opr.mnemonic = "RTI impl";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4861,18 +5099,20 @@ int do_RTI_impl(CPU *cpu)
 	//   Put return address into PC
 	cpu->PC = adl + (adh << 8);
 
-	log_op_end(cpu, -1, adl, ncycles);
+	opr.operand = -1;
+	opr.result = adl;
 
-	return ncycles;
+	return opr;
 }
 
-int do_RTS_impl(CPU *cpu)
+struct opreturn do_RTS_impl(CPU *cpu)
 // Return from subroutine with implied addressing
 {
-	int nbytes = 1;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "RTS impl", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 6;
+	opr.mnemonic = "RTS impl";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4892,19 +5132,21 @@ int do_RTS_impl(CPU *cpu)
 	// Cycle 5: Put return address into PC (add 1 for next instruction)
 	cpu->PC = adl + (adh << 8) + 1;
 
-	log_op_end(cpu, -1, adl, ncycles);
+	opr.operand = -1;
+	opr.result = adl;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_imm(CPU *cpu)
+struct opreturn do_SBC_imm(CPU *cpu)
 // Subtract with Carry, immediate addressing
 // 	A, C = A + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "SBC # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4926,19 +5168,21 @@ int do_SBC_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_abs(CPU *cpu)
+struct opreturn do_SBC_abs(CPU *cpu)
 // Subtract with Carry, absolute addressing
 // 	A, C = A + ~M + C
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "SBC abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -4967,21 +5211,23 @@ int do_SBC_abs(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_absX(CPU *cpu)
+struct opreturn do_SBC_absX(CPU *cpu)
 // Subtract with Carry, x-indexed absolute addressing
 // 	A, C = A + ~M + C
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Subtrahend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "SBC absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5007,7 +5253,7 @@ int do_SBC_absX(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -5027,21 +5273,23 @@ int do_SBC_absX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_absY(CPU *cpu)
+struct opreturn do_SBC_absY(CPU *cpu)
 // Subtract with Carry, y-indexed absolute addressing
 // 	A, C = A + ~M + C
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Subtrahend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC absY", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "SBC absY";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5067,7 +5315,7 @@ int do_SBC_absY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -5087,19 +5335,21 @@ int do_SBC_absY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_zpg(CPU *cpu)
+struct opreturn do_SBC_zpg(CPU *cpu)
 // Subtract with Carry, zero page addressing
 // 	A, C = A + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "SBC zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5124,19 +5374,21 @@ int do_SBC_zpg(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_zpgX(CPU *cpu)
+struct opreturn do_SBC_zpgX(CPU *cpu)
 // Subtract with Carry, X indexed zero page addressing
 // 	A, C = A + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC zpg,X", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "SBC zpg,X";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5164,19 +5416,21 @@ int do_SBC_zpgX(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_Xind(CPU *cpu)
+struct opreturn do_SBC_Xind(CPU *cpu)
 // Subtract with Carry, X indexed zero page indirect addressing
 // 	A, C = A + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC X,ind", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "SBC X,ind";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5212,21 +5466,23 @@ int do_SBC_Xind(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_indY(CPU *cpu)
+struct opreturn do_SBC_indY(CPU *cpu)
 // Subtract with Carry, zero page indirect Y indexed addressing
 // 	A, C = A + ~M + C
 {
-	int nbytes = 2;
-	int ncycles = 5;
 	word addr;			// Memory location
 	byte M;				// Subtrahend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC ind,Y", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "SBC ind,Y";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5253,7 +5509,7 @@ int do_SBC_indY(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4:  fetch byte
 		addr = (bah << 8) + bal;
@@ -5274,18 +5530,20 @@ int do_SBC_indY(CPU *cpu)
 
 	cpu->A = result;
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SEC_impl(CPU *cpu)
+struct opreturn do_SEC_impl(CPU *cpu)
 // Set Carry flag
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "SEC   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "SEC   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5293,18 +5551,20 @@ int do_SEC_impl(CPU *cpu)
 	// Cycle 1: Set C
 	cpu->SR |= C;
 
-	log_op_end(cpu, -1, cpu->SR, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->SR;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SEI_impl(CPU *cpu)
+struct opreturn do_SEI_impl(CPU *cpu)
 // Set interrupt disable
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "SEI   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "SEI   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5312,20 +5572,22 @@ int do_SEI_impl(CPU *cpu)
 	// Cycle 1: Set I
 	cpu->SR |= I;
 
-	log_op_end(cpu, -1, cpu->SR, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->SR;
 
-	return ncycles;
+	return opr;
 }
 
 // SED is below the execute array assignment
 
-int do_STA_abs(CPU *cpu)
+struct opreturn do_STA_abs(CPU *cpu)
 // Store Accumulator in memory with absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "STA abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "STA abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5341,18 +5603,20 @@ int do_STA_abs(CPU *cpu)
 	// Cycle 3:  store A at addr
 	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_STA_absX(CPU *cpu)
+struct opreturn do_STA_absX(CPU *cpu)
 // Store Accumulator in memory with X-indexed absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 5;
+	struct opreturn opr;
 
-	log_op_start(cpu, "STA absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 5;
+	opr.mnemonic = "STA absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5379,18 +5643,20 @@ int do_STA_absX(CPU *cpu)
 	word addr = (bah << 8) + bal;
 	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_STA_absY(CPU *cpu)
+struct opreturn do_STA_absY(CPU *cpu)
 // Store Accumulator in memory with Y-indexed absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 5;
+	struct opreturn opr;
 
-	log_op_start(cpu, "STA absY", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 5;
+	opr.mnemonic = "STA absY";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5417,18 +5683,20 @@ int do_STA_absY(CPU *cpu)
 	word addr = (bah << 8) + bal;
 	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_STA_zpg(CPU *cpu)
+struct opreturn do_STA_zpg(CPU *cpu)
 // Store Accumulator in memory with zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "STA zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "STA zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5440,18 +5708,20 @@ int do_STA_zpg(CPU *cpu)
 	// Cycle 2:  store A at addr
 	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_STA_zpgX(CPU *cpu)
+struct opreturn do_STA_zpgX(CPU *cpu)
 // Store Accumulator in memory with X-indexed zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "STA zpg,X", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "STA zpg,X";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5466,18 +5736,20 @@ int do_STA_zpgX(CPU *cpu)
 	// Cycle 3:  store A at addr
 	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_STA_Xind(CPU *cpu)
+struct opreturn do_STA_Xind(CPU *cpu)
 // Store Accumulator in memory with X-indexed zero page indirect addressing
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "STA X,ind", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "STA X,ind";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5500,18 +5772,20 @@ int do_STA_Xind(CPU *cpu)
 	// Cycle 5:  store A at addr
 	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_STA_indY(CPU *cpu)
+struct opreturn do_STA_indY(CPU *cpu)
 // Store Accumulator in memory with zero page indirect Y-indexed addressing
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "STA ind,Y", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "STA ind,Y";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5539,18 +5813,20 @@ int do_STA_indY(CPU *cpu)
 	word addr = (bah << 8) + bal;
 	write(*cpu->bus, addr, cpu->A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_STX_abs(CPU *cpu)
+struct opreturn do_STX_abs(CPU *cpu)
 // Store X register in memory with absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "STX abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "STX abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5566,18 +5842,20 @@ int do_STX_abs(CPU *cpu)
 	// Cycle 3:  store X at addr
 	write(*cpu->bus, addr, cpu->X);
 
-	log_op_end(cpu, addr, cpu->X, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_STX_zpg(CPU *cpu)
+struct opreturn do_STX_zpg(CPU *cpu)
 // Store X register in memory with zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "STX zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "STX zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5589,18 +5867,20 @@ int do_STX_zpg(CPU *cpu)
 	// Cycle 2:  store X at addr
 	write(*cpu->bus, addr, cpu->X);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_STX_zpgY(CPU *cpu)
+struct opreturn do_STX_zpgY(CPU *cpu)
 // Store X register in memory with Y-indexed zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "STX zpg,Y", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "STX zpg,Y";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5615,18 +5895,20 @@ int do_STX_zpgY(CPU *cpu)
 	// Cycle 3:  store X at addr
 	write(*cpu->bus, addr, cpu->X);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_STY_abs(CPU *cpu)
+struct opreturn do_STY_abs(CPU *cpu)
 // Store Y register in memory with absolute addressing
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "STY abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "STY abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5642,18 +5924,20 @@ int do_STY_abs(CPU *cpu)
 	// Cycle 3:  store Y at addr
 	write(*cpu->bus, addr, cpu->Y);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_STY_zpg(CPU *cpu)
+struct opreturn do_STY_zpg(CPU *cpu)
 // Store Y register in memory with absolute addressing
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "STY zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "STY zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5665,18 +5949,20 @@ int do_STY_zpg(CPU *cpu)
 	// Cycle 2:  store Y at addr
 	write(*cpu->bus, addr, cpu->Y);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_STY_zpgX(CPU *cpu)
+struct opreturn do_STY_zpgX(CPU *cpu)
 // Store Y register in memory with X-indexed zero page addressing
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "STY zpg,X", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "STY zpg,X";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5691,18 +5977,20 @@ int do_STY_zpgX(CPU *cpu)
 	// Cycle 3:  store Y at addr
 	write(*cpu->bus, addr, cpu->Y);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_TAX_impl(CPU *cpu)
+struct opreturn do_TAX_impl(CPU *cpu)
 // Transfer Accumulator to X
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "TAX   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "TAX   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5714,18 +6002,20 @@ int do_TAX_impl(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	log_op_end(cpu, -1, cpu->X, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_TSX_impl(CPU *cpu)
+struct opreturn do_TSX_impl(CPU *cpu)
 // Transfer Stack Pointer to X
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "TSX   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "TSX   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5733,18 +6023,20 @@ int do_TSX_impl(CPU *cpu)
 	// Cycle 1: copy byte from A to X
 	cpu->X = cpu->SP;
 
-	log_op_end(cpu, -1, cpu->X, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->X;
 
-	return ncycles;
+	return opr;
 }
 
-int do_TAY_impl(CPU *cpu)
+struct opreturn do_TAY_impl(CPU *cpu)
 // Transfer Accumulator to Y
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "TAY   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "TAY   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5756,18 +6048,20 @@ int do_TAY_impl(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	log_op_end(cpu, -1, cpu->Y, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->Y;
 
-	return ncycles;
+	return opr;
 }
 
-int do_TXA_impl(CPU *cpu)
+struct opreturn do_TXA_impl(CPU *cpu)
 // Transfer X to Accumulator
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "TXA   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "TXA   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5779,18 +6073,20 @@ int do_TXA_impl(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_TXS_impl(CPU *cpu)
+struct opreturn do_TXS_impl(CPU *cpu)
 // Transfer X to Stack Pointers
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "TXS   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "TXS   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5798,18 +6094,20 @@ int do_TXS_impl(CPU *cpu)
 	// Cycle 1: copy byte from X to SP
 	cpu->SP = cpu->X;
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_TYA_impl(CPU *cpu)
+struct opreturn do_TYA_impl(CPU *cpu)
 // Transfer Y to Accumulator
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "TYA   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "TYA   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5821,20 +6119,22 @@ int do_TYA_impl(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_imm_BCD(CPU *cpu)
+struct opreturn do_ADC_imm_BCD(CPU *cpu)
 // Add with Carry, immediate addressing - BCD mode
 // 	A, C = A + M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "ADC # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5891,20 +6191,22 @@ int do_ADC_imm_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_abs_BCD(CPU *cpu)
+struct opreturn do_ADC_abs_BCD(CPU *cpu)
 // Add with Carry, absolute addressing - BCD mode
 // 	A, C = A + M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "ADC abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -5968,22 +6270,24 @@ int do_ADC_abs_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_absX_BCD(CPU *cpu)
+struct opreturn do_ADC_absX_BCD(CPU *cpu)
 // Add with Carry, x-indexed absolute addressing - BCD mode
 // 	A, C = A + M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "ADC absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6009,7 +6313,7 @@ int do_ADC_absX_BCD(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -6064,22 +6368,24 @@ int do_ADC_absX_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_absY_BCD(CPU *cpu)
+struct opreturn do_ADC_absY_BCD(CPU *cpu)
 // Add with Carry, y-indexed absolute addressing - BCD mode
 // 	A, C = A + M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC absY", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "ADC absY";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6105,7 +6411,7 @@ int do_ADC_absY_BCD(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -6160,20 +6466,22 @@ int do_ADC_absY_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_zpg_BCD(CPU *cpu)
+struct opreturn do_ADC_zpg_BCD(CPU *cpu)
 // Add with Carry, zero page addressing - BCD mode
 // 	A, C = A + M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "ADC # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6233,20 +6541,22 @@ int do_ADC_zpg_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_zpgX_BCD(CPU *cpu)
+struct opreturn do_ADC_zpgX_BCD(CPU *cpu)
 // Add with Carry, X indexed zero page addressing - BCD mode
 // 	A, C = A + M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC zpg,X", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "ADC zpg,X";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6309,20 +6619,22 @@ int do_ADC_zpgX_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_Xind_BCD(CPU *cpu)
+struct opreturn do_ADC_Xind_BCD(CPU *cpu)
 // Add with Carry, X indexed zero page indirect addressing - BCD mode
 // 	A, C = A + M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 2;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC X,ind", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "ADC X,ind";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6393,22 +6705,24 @@ int do_ADC_Xind_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_ADC_indY_BCD(CPU *cpu)
+struct opreturn do_ADC_indY_BCD(CPU *cpu)
 // Add with Carry, zero page indirect Y indexed addressing - BCD mode
 // 	A, C = A + M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 2;
-	int ncycles = 5;
 	word addr;			// Memory location
 	byte M;				// Addend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "ADC ind,Y", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 5;
+	opr.mnemonic = "ADC ind,Y";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6435,7 +6749,7 @@ int do_ADC_indY_BCD(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4:  fetch byte
 		addr = (bah << 8) + bal;
@@ -6490,20 +6804,22 @@ int do_ADC_indY_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_imm_BCD(CPU *cpu)
+struct opreturn do_SBC_imm_BCD(CPU *cpu)
 // Subtract with Carry, immediate addressing - BCD mode
 // 	A, C = A + ~M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 2;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC # ", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 2;
+	opr.mnemonic = "SBC # ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6540,20 +6856,22 @@ int do_SBC_imm_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, -1, cpu->A, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_abs_BCD(CPU *cpu)
+struct opreturn do_SBC_abs_BCD(CPU *cpu)
 // Subtract with Carry, absolute addressing - BCD mode
 // 	A, C = A + ~M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC abs", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "SBC abs";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6597,22 +6915,24 @@ int do_SBC_abs_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_absX_BCD(CPU *cpu)
+struct opreturn do_SBC_absX_BCD(CPU *cpu)
 // Subtract with Carry, x-indexed absolute addressing - BCD mode
 // 	A, C = A + ~M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Subtrahend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC absX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "SBC absX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6638,7 +6958,7 @@ int do_SBC_absX_BCD(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -6673,22 +6993,24 @@ int do_SBC_absX_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_absY_BCD(CPU *cpu)
+struct opreturn do_SBC_absY_BCD(CPU *cpu)
 // Subtract with Carry, y-indexed absolute addressing - BCD mode
 // 	A, C = A + ~M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 3;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Subtrahend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC absY", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "SBC absY";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6714,7 +7036,7 @@ int do_SBC_absY_BCD(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4: fetch byte
 		addr = (bah << 8) + bal;
@@ -6749,20 +7071,22 @@ int do_SBC_absY_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_zpg_BCD(CPU *cpu)
+struct opreturn do_SBC_zpg_BCD(CPU *cpu)
 // Subtract with Carry, zero page addressing - BCD mode
 // 	A, C = A + ~M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 2;
-	int ncycles = 3;
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC zpg", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 3;
+	opr.mnemonic = "SBC zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6802,20 +7126,22 @@ int do_SBC_zpg_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_zpgX_BCD(CPU *cpu)
+struct opreturn do_SBC_zpgX_BCD(CPU *cpu)
 // Subtract with Carry, X indexed zero page addressing - BCD mode
 // 	A, C = A + ~M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 3;
-	int ncycles = 4;
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC xpgX", nbytes);
+	opr.bytes = 3;
+	opr.cycles = 4;
+	opr.mnemonic = "SBC xpgX";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6858,20 +7184,22 @@ int do_SBC_zpgX_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_Xind_BCD(CPU *cpu)
+struct opreturn do_SBC_Xind_BCD(CPU *cpu)
 // Subtract with Carry, X indexed zero page indirect addressing - BCD mode
 // 	A, C = A + ~M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 2;
-	int ncycles = 6;
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC X,ind", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 6;
+	opr.mnemonic = "SBC X,ind";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6922,22 +7250,24 @@ int do_SBC_Xind_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SBC_indY_BCD(CPU *cpu)
+struct opreturn do_SBC_indY_BCD(CPU *cpu)
 // Subtract with Carry, zero page indirect Y indexed addressing - BCD mode
 // 	A, C = A + ~M + C
 // 	Algorithm from http://www.6502.org/tutorials/decimal_mode.html#A
 {
-	int nbytes = 2;
-	int ncycles = 4;
 	word addr;			// Memory location
 	byte M;				// Subtrahend from memory
+	struct opreturn opr;
 
-	log_op_start(cpu, "SBC ind,Y", nbytes);
+	opr.bytes = 2;
+	opr.cycles = 4;
+	opr.mnemonic = "SBC ind,Y";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6964,7 +7294,7 @@ int do_SBC_indY_BCD(CPU *cpu)
 	{
 		bah = bah + 1;
 		bal = bal & 0xFF;	// Trim off carry bit
-		ncycles += 1;
+		opr.cycles += 1;
 
 		// Cycle 4:  fetch byte
 		addr = (bah << 8) + bal;
@@ -6999,12 +7329,13 @@ int do_SBC_indY_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	log_op_end(cpu, addr, cpu->A, ncycles);
+	opr.operand = addr;
+	opr.result = cpu->A;
 
-	return ncycles;
+	return opr;
 }
 
-int (*execute[])(CPU *cpu) =
+struct opreturn (*execute[])(CPU *cpu) =
 {
 do_BRK_impl, 	// 0x00
 do_ORA_Xind, 	// 0x01
@@ -7264,13 +7595,14 @@ do_INC_absX, 	// 0xFE
 do_NOP_impl  	// 0xFF
 };
 
-int do_CLD_impl(CPU *cpu)
+struct opreturn do_CLD_impl(CPU *cpu)
 // Clear Decimal flag
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "CLD   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "CLD   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -7295,18 +7627,20 @@ int do_CLD_impl(CPU *cpu)
 	execute[0xE1] = do_SBC_Xind;
 	execute[0xF1] = do_SBC_indY;
 
-	log_op_end(cpu, -1, cpu->SR, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->SR;
 
-	return ncycles;
+	return opr;
 }
 
-int do_SED_impl(CPU *cpu)
+struct opreturn do_SED_impl(CPU *cpu)
 // Set Decimal flag
 {
-	int nbytes = 1;
-	int ncycles = 2;
+	struct opreturn opr;
 
-	log_op_start(cpu, "SED   ", nbytes);
+	opr.bytes = 1;
+	opr.cycles = 2;
+	opr.mnemonic = "SED   ";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -7332,7 +7666,8 @@ int do_SED_impl(CPU *cpu)
 	execute[0xE1] = do_SBC_Xind_BCD;
 	execute[0xF1] = do_SBC_indY_BCD;
 
-	log_op_end(cpu, -1, cpu->SR, ncycles);
+	opr.operand = -1;
+	opr.result = cpu->SR;
 
-	return ncycles;
+	return opr;
 }

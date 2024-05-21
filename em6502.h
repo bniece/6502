@@ -16,7 +16,7 @@
 #define DEF_CODE_ADDR 0x0600
 
 // Get array of instruction functions
-extern int (*execute[])(CPU *cpu);
+extern struct opreturn (*execute[])(CPU *cpu);
 
 // IO functions
 void log_op(CPU *cpu, struct opreturn opr);
