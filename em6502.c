@@ -18,7 +18,8 @@ int main(int argc, char *argv[])
    int c, opt_idx = 0;	// getopt variables
 	int r;					// memory operation result
 	int print_log = 1;	// enable/disable code log
-	struct opreturn opr = test_op(); // operation result
+	//struct opreturn opr = test_op(); // operation result
+	struct opreturn opr; // operation result
 
 	// Track performance
 	int cycle_count = 0;
@@ -100,7 +101,6 @@ int main(int argc, char *argv[])
 		 print_zpg = atoi(optarg);
 		 break;
 	 case 'L':
-		 set_print_trace(atoi(optarg));
 		 print_log = atoi(optarg);
 		 break;
       }

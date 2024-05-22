@@ -8,76 +8,7 @@
 // Note:  The functions in this file are in pseudo-alphabetical order,
 // 	not in opcode order like in the header
 
-#include <stdio.h>
-
 #include "instructions.h"
-
-int print_trace = 1;
-
-void log_op_start(CPU *cpu, char *op, int bytes)
-{
-// Print operation address, mnemonic, and bytes consumed
-	if (print_trace == 0)
-	{
-		return;
-	}
-
-	printf("0x%04X %-9s (%d bytes) ", cpu->PC, op, bytes);
-}
-
-void log_op_end(CPU *cpu, int address, byte result, int cycles)
-// Count cycles, print operation address, result & status register
-{
-	if (print_trace == 0)
-	{
-		return;
-	}
-
-	for (cpu->TC = 0; cpu->TC < cycles; cpu->TC++)
-	{
-		printf(" .");
-	}
-	for (cpu->TC = cycles - 1; cpu->TC < 7; cpu->TC++)
-	{
-		printf("  ");
-	}
-
-	if (address == -1)
-	{
-		printf("       0x%02X", result);
-	}
-	else
-	{
-		printf("0x%04X 0x%02X", address, result);
-	}
-
-	printf(" %c%c%c%c%c%c%c%c", cpu->SR & N ? 'N' : '.', 
-			cpu->SR & V ? 'V' : '.', '.', cpu->SR & B ? 'B' : '.', 
-			cpu->SR & D ? 'D' : '.', cpu->SR & I ? 'I' : '.',
-			cpu->SR & Z ? 'Z' : '.', cpu->SR & C ? 'C' : '.');
-
-	printf("\n");
-}
-
-void set_print_trace(int pt)
-{
-	print_trace = pt;
-}
-
-
-struct opreturn test_op()
-{
-	struct opreturn opr;
-
-	opr.mnemonic = "TST impl";
-	opr.bytes = 1;
-	opr.cycles = 1;
-	opr.operand = 0x0200;
-	opr.result = 0x2A;
-
-	return opr;
-}
-
 
 struct opreturn do_ADC_imm(CPU *cpu)
 // Add with Carry, immediate addressing
