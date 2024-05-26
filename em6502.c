@@ -18,7 +18,6 @@ int main(int argc, char *argv[])
    int c, opt_idx = 0;	// getopt variables
 	int r;					// memory operation result
 	int print_log = 1;	// enable/disable code log
-	//struct opreturn opr = test_op(); // operation result
 	struct opreturn opr; // operation result
 
 	// Track performance
@@ -182,6 +181,12 @@ int main(int argc, char *argv[])
 	printf("\nExecuting . . . \n");
 	do 
 	{
+		// Log operation to stdout if enabled
+		if (print_log == 1)
+		{
+			log_PC(&cpu);
+		}
+		
 		cpu.IR = read(bus, cpu.PC);
 		opr = execute[cpu.IR](&cpu);
 		cycle_count += opr.cycles;
@@ -250,9 +255,14 @@ int main(int argc, char *argv[])
    return 0;
 }
 
+void log_PC(CPU *cpu)
+{
+	printf("0x%04X ", cpu->PC);
+}
+
 void log_op(CPU *cpu, struct opreturn opr)
 {
-	printf("0x%04X %-9s ", cpu->PC - opr.bytes, opr.mnemonic);
+	printf("%-9s ", opr.mnemonic);
 
 	if (opr.bytes == 1)
 	{
@@ -278,7 +288,14 @@ void log_op(CPU *cpu, struct opreturn opr)
 	}
 	else
 	{
-		printf("0x%04X 0x%02X", opr.operand, opr.result);
+		if (opr.operand <= 0xFF)
+		{
+			printf("  0x%02X 0x%02X", opr.operand, opr.result);
+		}
+		else
+		{
+			printf("0x%04X 0x%02X", opr.operand, opr.result);
+		}
 	}
 
 	printf(" %c%c%c%c%c%c%c%c", cpu->SR & N ? 'N' : '.', 

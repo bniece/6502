@@ -39,7 +39,7 @@ struct opreturn do_ADC_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	opr.operand = -1;
+	opr.operand = M;
 	opr.result = cpu->A;
 
 	return opr;
@@ -428,7 +428,7 @@ struct opreturn do_AND_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	opr.operand = -1;
+	opr.operand = M;
 	opr.result = cpu->A;
 
 	return opr;
@@ -1053,7 +1053,7 @@ struct opreturn do_BCC_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	opr.operand = -1;
+	opr.operand = cpu->PC;
 	opr.result = M;
 
 	return opr;
@@ -1109,7 +1109,7 @@ struct opreturn do_BCS_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	opr.operand = -1;
+	opr.operand = cpu->PC;
 	opr.result = M;
 
 	return opr;
@@ -1165,7 +1165,7 @@ struct opreturn do_BEQ_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	opr.operand = -1;
+	opr.operand = cpu->PC;
 	opr.result = M;
 
 	return opr;
@@ -1307,7 +1307,7 @@ struct opreturn do_BMI_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	opr.operand = -1;
+	opr.operand = cpu->PC;
 	opr.result = M;
 
 	return opr;
@@ -1363,7 +1363,7 @@ struct opreturn do_BNE_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	opr.operand = -1;
+	opr.operand = cpu->PC;
 	opr.result = M;
 
 	return opr;
@@ -1419,7 +1419,7 @@ struct opreturn do_BPL_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	opr.operand = -1;
+	opr.operand = cpu->PC;
 	opr.result = M;
 
 	return opr;
