@@ -1438,7 +1438,7 @@ struct opreturn do_BRK_impl(CPU *cpu)
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = 0;
 
 	return opr;
@@ -1494,7 +1494,7 @@ struct opreturn do_BVC_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	opr.operand = -1;
+	opr.operand = cpu->PC;
 	opr.result = M;
 
 	return opr;
@@ -1550,7 +1550,7 @@ struct opreturn do_BVS_rel(CPU *cpu)
 		cpu->PC = ((ADH & 0xFF)<<8) + (ADL & 0xFF);
 	}
 
-	opr.operand = -1;
+	opr.operand = cpu->PC;
 	opr.result = M;
 
 	return opr;
@@ -1571,7 +1571,7 @@ struct opreturn do_CLC_impl(CPU *cpu)
 	// Cycle 1: Clear C
 	cpu->SR &= ~C;
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->SR;
 
 	return opr;
@@ -1592,7 +1592,7 @@ struct opreturn do_CLI_impl(CPU *cpu)
 	// Cycle 1: Clear I
 	cpu->SR &= ~I;
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->SR;
 
 	return opr;
@@ -1615,7 +1615,7 @@ struct opreturn do_CLV_impl(CPU *cpu)
 	// Cycle 1: Clear V
 	cpu->SR &= ~V;
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->SR;
 
 	return opr;
@@ -1649,7 +1649,7 @@ struct opreturn do_CMP_imm(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	opr.operand = -1;
+	opr.operand = M;
 	opr.result = cpu->A;
 
 	return opr;
@@ -2030,7 +2030,7 @@ struct opreturn do_CPX_imm(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	opr.operand = -1;
+	opr.operand = M;
 	opr.result = cpu->X;
 
 	return opr;
@@ -2142,7 +2142,7 @@ struct opreturn do_CPY_imm(CPU *cpu)
 	set_N(cpu, result);
 	set_Z(cpu, result);
 
-	opr.operand = -1;
+	opr.operand = M;
 	opr.result = cpu->Y;
 
 	return opr;
@@ -2415,7 +2415,7 @@ struct opreturn do_EOR_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	opr.operand = -1;
+	opr.operand = M;
 	opr.result = cpu->A;
 
 	return opr;
@@ -2944,7 +2944,7 @@ struct opreturn do_DEX_impl(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->X;
 
 	return opr;
@@ -2969,7 +2969,7 @@ struct opreturn do_DEY_impl(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->Y;
 
 	return opr;
@@ -2994,7 +2994,7 @@ struct opreturn do_INX_impl(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->X;
 
 	return opr;
@@ -3019,7 +3019,7 @@ struct opreturn do_INY_impl(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->Y;
 
 	return opr;
@@ -3049,7 +3049,7 @@ struct opreturn do_JMP_abs(CPU *cpu)
 	cpu->PC = addr;
 
 	opr.operand = addr;
-	opr.result = adl;
+	opr.result = 0;
 
 	return opr;
 }
@@ -3087,7 +3087,7 @@ struct opreturn do_JMP_ind(CPU *cpu)
 	cpu->PC = addr;
 
 	opr.operand = addr;
-	opr.result = adl;
+	opr.result = 0;
 
 	return opr;
 }
@@ -3125,8 +3125,8 @@ struct opreturn do_JSR_abs(CPU *cpu)
 	// Cycle 5:  Set PC for jump
 	cpu->PC = addr;
 
-	opr.operand = addr;
-	opr.result = adl;
+	opr.operand = cpu->PC;
+	opr.result = 0;
 
 	return opr;
 }
@@ -3158,7 +3158,7 @@ struct opreturn do_ORA_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	opr.operand = -1;
+	opr.operand = M;
 	opr.result = cpu->A;
 
 	return opr;
@@ -3524,7 +3524,7 @@ struct opreturn do_PHA_impl(CPU *cpu)
 	// Cycle 2: Decrement stack pointer
 	cpu->SP--;
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->A;
 
 	return opr;
@@ -3548,7 +3548,7 @@ struct opreturn do_PHP_impl(CPU *cpu)
 	// Cycle 2: Decrement stack pointer
 	cpu->SP--;
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->A;
 
 	return opr;
@@ -3576,7 +3576,7 @@ struct opreturn do_PLA_impl(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->A;
 
 	return opr;
@@ -3602,7 +3602,7 @@ struct opreturn do_PLP_impl(CPU *cpu)
 
 	// Cycle 3: Not sure what happens here.  Flags should be set
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->A;
 
 	return opr;
@@ -3628,7 +3628,7 @@ struct opreturn do_LDA_imm(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	opr.operand = -1;
+	opr.operand = cpu->A;
 	opr.result = cpu->A;
 
 	return opr;
@@ -3942,7 +3942,7 @@ struct opreturn do_LDX_imm(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	opr.operand = -1;
+	opr.operand = cpu->X;
 	opr.result = cpu->X;
 
 	return opr;
@@ -4113,7 +4113,7 @@ struct opreturn do_LDY_imm(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	opr.operand = -1;
+	opr.operand = cpu->Y;
 	opr.result = cpu->Y;
 
 	return opr;
@@ -4292,7 +4292,7 @@ struct opreturn do_LSR_A(CPU *cpu)
 	//   Set Z if necessary
 	set_Z(cpu, cpu->A);
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->A;
 
 	return opr;
@@ -4510,7 +4510,7 @@ struct opreturn do_NOP_impl(CPU *cpu)
 
 	// Cycle 1: Do nothing
 	
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = 0;
 
 	return opr;
@@ -4546,7 +4546,7 @@ struct opreturn do_ROL_A(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->A;
 
 	return opr;
@@ -4788,7 +4788,7 @@ struct opreturn do_ROR_A(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->A;
 
 	return opr;
@@ -5030,8 +5030,8 @@ struct opreturn do_RTI_impl(CPU *cpu)
 	//   Put return address into PC
 	cpu->PC = adl + (adh << 8);
 
-	opr.operand = -1;
-	opr.result = adl;
+	opr.operand = cpu->PC;
+	opr.result = 0;
 
 	return opr;
 }
@@ -5063,8 +5063,8 @@ struct opreturn do_RTS_impl(CPU *cpu)
 	// Cycle 5: Put return address into PC (add 1 for next instruction)
 	cpu->PC = adl + (adh << 8) + 1;
 
-	opr.operand = -1;
-	opr.result = adl;
+	opr.operand = cpu->PC;
+	opr.result = 0;
 
 	return opr;
 }
