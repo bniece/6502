@@ -48,7 +48,4 @@ void set_V(CPU *cpu, byte op1, byte op2, byte result);
 void set_Z(CPU *cpu, byte reg);
 void set_C(CPU *cpu, int result);
 
-// Emulator Functions
-void print_registers(CPU *cpu);
-
 #endif

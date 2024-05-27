@@ -17,7 +17,7 @@ I wonder if the redirected code trace is why MSVC is so much slower.
 I will add an option to silence that.
 
 5/12/2024
-(using -C 0 -D 0 -S 0 -Z 0 -T 0)
+(using -C 0 -D 0 -S 0 -Z 0 -L 0)
 noV-abs
 MSVC: 0.731 s
 MSYS2: 0.698 s

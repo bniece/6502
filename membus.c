@@ -124,28 +124,3 @@ int export_mem(char *filename, membus *bus, word addr, int npages)
 	return 0;
 }
 
-void print_mem_page(membus *bus, word addr, int mark)
-// Print memory page as hex bytes in 16 x 16 grid, marking selected byte
-// 	Prefixed with address of first byte on line
-// 	Any value < 0 or > 255 will cause no mark
-{
-	for (int row = 0; row < 16; row++)
-	{
-		printf("0x%04X: ", addr + row * 16);
-		for (int col = 0; col < 16; col++)
-		{
-			int offset = row * 16 + col;
-			printf("%02X", bus->mem[addr + offset]);
-			if (offset == mark)
-			{
-				printf("* ");
-			}
-			else
-			{
-				printf("  ");
-			}
-		}
-		printf("\n");
-	}
-}
-

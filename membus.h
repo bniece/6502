@@ -46,6 +46,6 @@ int export_mem(char *filename, membus *bus, word addr, int npages);
 	// returns 0 on success
 	// 		-1 on file epen error
 	// 		-2 on file write error
-void print_mem_page(membus *mem, word addr, int mark);
+//void print_mem_page(membus *mem, word addr, int mark);
 
 #endif

@@ -5,9 +5,6 @@
 //
 // Brian K. Niece
 
-#include <stdio.h>
-#include <string.h>
-
 #include "cpu.h"
 #include "membus.h"
 
@@ -103,22 +100,5 @@ void set_C(CPU *cpu, int result)
 	{
 		cpu->SR |= C;
 	}
-}
-
-void print_registers(CPU *cpu)
-// List contents of CPU on stdout
-{
-	printf("\n");
-	printf("6502 CPU Status:\n");
-	printf("PC: 0x%04X\n", cpu->PC);
-	printf("SP: 0x%02X\n", cpu->SP);
-	printf("N V - B D I Z C\n");
-	printf("%d %d 1 %d %d %d %d %d\n", 
-			(cpu->SR & N)/N, (cpu->SR & V)/V, (cpu->SR & B)/B, 
-			(cpu->SR & D)/D, (cpu->SR & I)/I, (cpu->SR & Z)/Z, 
-			(cpu->SR & C)/C);
-	printf("IR: 0x%02X\tTC: 0x%02X\n", cpu->IR, cpu->TC);
-	printf("A:  0x%02X\tX:  0x%02X\tY:  0x%02X\n", cpu->A, 
-			cpu->X, cpu->Y);
 }
 

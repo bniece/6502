@@ -69,14 +69,10 @@ int main(int argc, char *argv[])
 	    return 0;
 	    break;
 	 case 'c':
-		 int code_in;
-		 sscanf(optarg, "%x", &code_in);
-		 code = code_in;
+		 sscanf(optarg, "%hx", &code);
 	    break;
 	 case 'd':
-		 int data_in;
-		 sscanf(optarg, "%x", &data_in);
-		 data = data_in;
+		 sscanf(optarg, "%hx", &data);
 	    break;
 	 case 'p':
 		 code_file = optarg;
@@ -253,6 +249,48 @@ int main(int argc, char *argv[])
 	printf("\nCycles: %d\n", cycle_count);
 
    return 0;
+}
+
+void print_registers(CPU *cpu)
+// List contents of CPU on stdout
+{
+	printf("\n");
+	printf("6502 CPU Status:\n");
+	printf("PC: 0x%04X\n", cpu->PC);
+	printf("SP: 0x%02X\n", cpu->SP);
+	printf("N V - B D I Z C\n");
+	printf("%d %d 1 %d %d %d %d %d\n", 
+			(cpu->SR & N)/N, (cpu->SR & V)/V, (cpu->SR & B)/B, 
+			(cpu->SR & D)/D, (cpu->SR & I)/I, (cpu->SR & Z)/Z, 
+			(cpu->SR & C)/C);
+	printf("IR: 0x%02X\tTC: 0x%02X\n", cpu->IR, cpu->TC);
+	printf("A:  0x%02X\tX:  0x%02X\tY:  0x%02X\n", cpu->A, 
+			cpu->X, cpu->Y);
+}
+
+void print_mem_page(membus *bus, word addr, int mark)
+// Print memory page as hex bytes in 16 x 16 grid, marking selected byte
+// 	Prefixed with address of first byte on line
+// 	Any value < 0 or > 255 will cause no mark
+{
+	for (int row = 0; row < 16; row++)
+	{
+		printf("0x%04X: ", addr + row * 16);
+		for (int col = 0; col < 16; col++)
+		{
+			int offset = row * 16 + col;
+			printf("%02X", bus->mem[addr + offset]);
+			if (offset == mark)
+			{
+				printf("* ");
+			}
+			else
+			{
+				printf("  ");
+			}
+		}
+		printf("\n");
+	}
 }
 
 void log_PC(CPU *cpu)

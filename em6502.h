@@ -19,6 +19,8 @@
 extern struct opreturn (*execute[])(CPU *cpu);
 
 // IO functions
+void print_registers(CPU *cpu);
+void print_mem_page(membus *mem, word addr, int mark);
 void log_PC(CPU *cpu);
 void log_op(CPU *cpu, struct opreturn opr);
 

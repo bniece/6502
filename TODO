@@ -38,6 +38,12 @@ S, print-stack: print stack (1, default) or not (0)
 Z, print-zero-page: print zero page (1, default) or not (0)
 L, print-code-log: print code log (1, default) or not (0)
 
+Code Log:  Next to last column is the operand as follows (based on the addressing mode):
+	immediate - the immediate value
+	abs, zpg, indirect, indexed - the final address used including any index or lookup
+	relative - the offset
+	Jump & Return operations - the new PC value	
+
 bkn6502 options:
 p, program-file: code file, default = code.bin
 o, output-file: data output file, default = out.bin
