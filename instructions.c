@@ -803,7 +803,7 @@ struct opreturn do_ASL_A(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->A;
 
 	return opr;
@@ -5099,7 +5099,7 @@ struct opreturn do_SBC_imm(CPU *cpu)
 
 	cpu->A = result;
 
-	opr.operand = -1;
+	opr.operand = M;
 	opr.result = cpu->A;
 
 	return opr;
@@ -5482,7 +5482,7 @@ struct opreturn do_SEC_impl(CPU *cpu)
 	// Cycle 1: Set C
 	cpu->SR |= C;
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->SR;
 
 	return opr;
@@ -5503,7 +5503,7 @@ struct opreturn do_SEI_impl(CPU *cpu)
 	// Cycle 1: Set I
 	cpu->SR |= I;
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->SR;
 
 	return opr;
@@ -5933,7 +5933,7 @@ struct opreturn do_TAX_impl(CPU *cpu)
 	set_N(cpu, cpu->X);
 	set_Z(cpu, cpu->X);
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->X;
 
 	return opr;
@@ -5954,7 +5954,7 @@ struct opreturn do_TSX_impl(CPU *cpu)
 	// Cycle 1: copy byte from A to X
 	cpu->X = cpu->SP;
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->X;
 
 	return opr;
@@ -5979,7 +5979,7 @@ struct opreturn do_TAY_impl(CPU *cpu)
 	set_N(cpu, cpu->Y);
 	set_Z(cpu, cpu->Y);
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->Y;
 
 	return opr;
@@ -6004,7 +6004,7 @@ struct opreturn do_TXA_impl(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->A;
 
 	return opr;
@@ -6025,8 +6025,8 @@ struct opreturn do_TXS_impl(CPU *cpu)
 	// Cycle 1: copy byte from X to SP
 	cpu->SP = cpu->X;
 
-	opr.operand = -1;
-	opr.result = cpu->A;
+	opr.operand = 0;
+	opr.result = cpu->SP;
 
 	return opr;
 }
@@ -6050,7 +6050,7 @@ struct opreturn do_TYA_impl(CPU *cpu)
 	set_N(cpu, cpu->A);
 	set_Z(cpu, cpu->A);
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->A;
 
 	return opr;
@@ -6122,7 +6122,7 @@ struct opreturn do_ADC_imm_BCD(CPU *cpu)
 	new_A = old_A + M + old_C;
 	set_Z(cpu, new_A);
 
-	opr.operand = -1;
+	opr.operand = M;
 	opr.result = cpu->A;
 
 	return opr;
@@ -6412,7 +6412,7 @@ struct opreturn do_ADC_zpg_BCD(CPU *cpu)
 
 	opr.bytes = 2;
 	opr.cycles = 3;
-	opr.mnemonic = "ADC # ";
+	opr.mnemonic = "ADC zpg";
 
 	// Cycle 0: instruction fetched, increment PC
 	cpu->PC++;
@@ -6787,7 +6787,7 @@ struct opreturn do_SBC_imm_BCD(CPU *cpu)
 	set_V(cpu, old_A, ~M, result);
 	set_Z(cpu, result);
 
-	opr.operand = -1;
+	opr.operand = M;
 	opr.result = cpu->A;
 
 	return opr;
@@ -7558,7 +7558,7 @@ struct opreturn do_CLD_impl(CPU *cpu)
 	execute[0xE1] = do_SBC_Xind;
 	execute[0xF1] = do_SBC_indY;
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->SR;
 
 	return opr;
@@ -7597,7 +7597,7 @@ struct opreturn do_SED_impl(CPU *cpu)
 	execute[0xE1] = do_SBC_Xind_BCD;
 	execute[0xF1] = do_SBC_indY_BCD;
 
-	opr.operand = -1;
+	opr.operand = 0;
 	opr.result = cpu->SR;
 
 	return opr;
